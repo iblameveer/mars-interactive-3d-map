@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 function createProceduralMarsTextures() {
   if (typeof document === "undefined") return { map: null, bump: null };
 
-  const size = 1024;
+  const size = 2048;
   
   // Color Map
   const colorCanvas = document.createElement("canvas");
@@ -19,16 +19,16 @@ function createProceduralMarsTextures() {
   const colorCtx = colorCanvas.getContext("2d")!;
   
   // Base color (Reddish-brown)
-  colorCtx.fillStyle = "#8b4513";
+  colorCtx.fillStyle = "#6d321d";
   colorCtx.fillRect(0, 0, size, size);
   
   // Add some variation/noise
-  for (let i = 0; i < 8000; i++) {
+  for (let i = 0; i < 15000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 25;
-    const opacity = Math.random() * 0.3;
-    const colors = ["#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e"];
+    const radius = Math.random() * 40;
+    const opacity = Math.random() * 0.4;
+    const colors = ["#8b4513", "#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e", "#3e2723"];
     colorCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
     colorCtx.globalAlpha = opacity;
     colorCtx.beginPath();
@@ -37,21 +37,33 @@ function createProceduralMarsTextures() {
   }
   
   // Add some "craters" and dark patches
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < 800; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 8 + 2;
-    colorCtx.fillStyle = "#2b1d0e";
-    colorCtx.globalAlpha = 0.5;
+    const radius = Math.random() * 12 + 2;
+    colorCtx.fillStyle = "#1a0f08";
+    colorCtx.globalAlpha = 0.6;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
     
     // Crater rim
     colorCtx.strokeStyle = "#3e2723";
-    colorCtx.globalAlpha = 0.3;
+    colorCtx.globalAlpha = 0.4;
     colorCtx.lineWidth = 1;
     colorCtx.stroke();
+  }
+
+  // Add some dust storms (white/light patches)
+  for (let i = 0; i < 50; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 100 + 50;
+    colorCtx.fillStyle = "#d2b48c";
+    colorCtx.globalAlpha = 0.1;
+    colorCtx.beginPath();
+    colorCtx.arc(x, y, radius, 0, Math.PI * 2);
+    colorCtx.fill();
   }
 
   // Bump Map (Greyscale)
@@ -64,13 +76,13 @@ function createProceduralMarsTextures() {
   bumpCtx.fillStyle = "#808080";
   bumpCtx.fillRect(0, 0, size, size);
   
-  for (let i = 0; i < 5000; i++) {
+  for (let i = 0; i < 10000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 20;
+    const radius = Math.random() * 30;
     const grey = Math.floor(Math.random() * 255);
     bumpCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
-    bumpCtx.globalAlpha = 0.15;
+    bumpCtx.globalAlpha = 0.2;
     bumpCtx.beginPath();
     bumpCtx.arc(x, y, radius, 0, Math.PI * 2);
     bumpCtx.fill();
