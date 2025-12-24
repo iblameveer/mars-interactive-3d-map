@@ -222,152 +222,54 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
         <meshBasicMaterial color={poi.color} transparent opacity={0.3} />
       </mesh>
 
-      {(hovered || active) && (
+      {hovered && !active && (
         <Html distanceFactor={10} zIndexRange={[10, 0]}>
           <div className="pointer-events-none select-none">
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className={`px-3 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2 whitespace-nowrap transition-all ${
-                active 
-                ? 'bg-white text-black border-white font-bold' 
-                : 'bg-black/80 text-white border-white/20'
-              }`}
+              className="px-3 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2 whitespace-nowrap bg-black/80 text-white border-white/20"
             >
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: active ? '#000' : poi.color }} />
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: poi.color }} />
               <span className="text-[11px] tracking-tight uppercase font-['Space_Grotesk']">{poi.name}</span>
             </motion.div>
           </div>
+        </Html>
+      )}
+
+      {active && (
+        <Html distanceFactor={8} zIndexRange={[15, 0]}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="pointer-events-none"
+          >
+            <div className="w-24 h-24 rounded-full border-2 border-orange-500 overflow-hidden shadow-[0_0_20px_rgba(251,146,60,0.5)] bg-black">
+              <img src={poi.image} alt={poi.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="h-8 w-px bg-orange-500 mx-auto" />
+          </motion.div>
         </Html>
       )}
     </group>
   );
 }
 
-const AtmosphereShader = {
-  uniforms: {
-    color: { value: new THREE.Color("#ff7f50") },
-    coeficient: { value: 0.5 },
-    power: { value: 4.0 },
-  },
-  vertexShader: `
-    varying vec3 vNormal;
-    varying vec3 vEyeVector;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      vEyeVector = normalize(-mvPosition.xyz);
-      gl_Position = projectionMatrix * mvPosition;
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vNormal;
-    varying vec3 vEyeVector;
-    uniform vec3 color;
-    uniform float coeficient;
-    uniform float power;
-    void main() {
-      float dotProduct = dot(vNormal, vEyeVector);
-      float intensity = pow(coeficient - dotProduct, power);
-      gl_FragColor = vec4(color, intensity);
-    }
-  `
-};
+function ZoomTracker({ onZoomThreshold }: { onZoomThreshold: () => void }) {
+  const { camera } = useThree();
+  const triggered = useRef(false);
 
-function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, onPoiSelect: (poi: typeof POIS[0]) => void }) {
-  const marsRef = useRef<THREE.Mesh>(null);
-  const textures = useMemo(() => createProceduralMarsTextures(), []);
-
-  useFrame((state, delta) => {
-    if (marsRef.current && !activePoi) {
-      marsRef.current.rotation.y += delta * 0.04;
+  useFrame(() => {
+    const distance = camera.position.length();
+    if (distance < 1.41 && !triggered.current) {
+      triggered.current = true;
+      onZoomThreshold();
+    } else if (distance >= 1.41) {
+      triggered.current = false;
     }
   });
 
-  if (!textures.map || !textures.bump) return null;
-
-  return (
-    <group>
-      {/* Internal Core Glow */}
-      <mesh scale={0.99}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshBasicMaterial color="#2a0d08" />
-      </mesh>
-
-      <mesh ref={marsRef}>
-        <sphereGeometry args={[1, 128, 128]} />
-        <meshStandardMaterial 
-          map={textures.map} 
-          bumpMap={textures.bump}
-          bumpScale={0.15}
-          roughness={0.7}
-          metalness={0.15}
-        />
-        {POIS.map((poi) => (
-          <Marker 
-            key={poi.name} 
-            poi={poi} 
-            onClick={() => onPoiSelect(poi)} 
-            active={activePoi?.name === poi.name}
-          />
-        ))}
-      </mesh>
-      
-      {/* Atmosphere Layer 1 (Outer Glow) */}
-      <mesh scale={1.08}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <shaderMaterial
-          {...AtmosphereShader}
-          side={THREE.BackSide}
-          transparent
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Atmosphere Layer 2 (Soft Haze) */}
-      <mesh scale={1.03}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial 
-          color="#ff4500"
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Decorative Rings / HUD in 3D */}
-      <group rotation={[Math.PI / 2, 0, 0]}>
-        <mesh>
-          <ringGeometry args={[1.2, 1.205, 128]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
-        </mesh>
-        <mesh rotation={[0, 0, Math.PI / 4]}>
-          <ringGeometry args={[1.25, 1.252, 128]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.05} side={THREE.DoubleSide} />
-        </mesh>
-      </group>
-    </group>
-  );
-}
-
-function ScannerHUD() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
-      {/* Crosshair corners */}
-      <div className="absolute top-12 left-12 w-16 h-16 border-t border-l border-white/20" />
-      <div className="absolute top-12 right-12 w-16 h-16 border-t border-r border-white/20" />
-      <div className="absolute bottom-12 left-12 w-16 h-16 border-b border-l border-white/20" />
-      <div className="absolute bottom-12 right-12 w-16 h-16 border-b border-r border-white/20" />
-
-      {/* Scanning Line */}
-      <motion.div 
-        animate={{ top: ["0%", "100%", "0%"] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent z-0"
-      />
-    </div>
-  );
+  return null;
 }
 
 function TelemetryFeed() {
@@ -377,6 +279,8 @@ function TelemetryFeed() {
     const messages = [
       "SCANNING SURFACE...",
       "THERMAL ANOMALY DETECTED",
+      "BLOCKCHAIN NODE SYNC: 100%",
+      "METAVERSE BUFFERING...",
       "ORBITAL STABILITY: 100%",
       "ATMOSPHERIC DENSITY: 0.020 kg/m³",
       "POI COORDINATES LOCKED",
@@ -384,7 +288,9 @@ function TelemetryFeed() {
       "RADIATION LEVELS: NOMINAL",
       "DUST STORM WARNING: SECTOR 4",
       "SIGNAL STRENGTH: -84 dBm",
-      "OXYGEN EXTRACTION: ACTIVE"
+      "OXYGEN EXTRACTION: ACTIVE",
+      "WEB3 PROTOCOL: SECURE",
+      "VIRTUAL REALITY OVERLAY: STABLE"
     ];
 
     const interval = setInterval(() => {
@@ -395,7 +301,7 @@ function TelemetryFeed() {
   }, []);
 
   return (
-    <div className="absolute top-32 left-8 flex flex-col gap-1.5 pointer-events-none">
+    <div className="absolute top-32 left-8 flex flex-col gap-1.5 pointer-events-none z-10">
       <AnimatePresence>
         {logs.map((log, i) => (
           <motion.div
@@ -416,12 +322,29 @@ function TelemetryFeed() {
 
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
+  const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
+
+  const handleZoomThreshold = () => {
+    setIsViewingOnline(true);
+  };
 
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
         <ScannerHUD />
         <TelemetryFeed />
+
+        {/* Blockchain/Metaverse Status Bar */}
+        <div className="absolute top-8 right-8 flex gap-6 z-10 pointer-events-none opacity-60">
+          <div className="flex flex-col items-end">
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40">Blockchain Status</div>
+            <div className="text-[10px] text-green-500 font-bold tracking-widest">VALIDATED</div>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40">Metaverse Sync</div>
+            <div className="text-[10px] text-blue-500 font-bold tracking-widest">REAL-TIME</div>
+          </div>
+        </div>
 
         <Canvas shadows gl={{ antialias: true, alpha: true }}>
           <PerspectiveCamera makeDefault position={[0, 0, 2.5]} fov={45} />
@@ -445,10 +368,44 @@ export function MarsMap() {
           
           <Suspense fallback={null}>
             <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+            <ZoomTracker onZoomThreshold={handleZoomThreshold} />
           </Suspense>
         </Canvas>
 
+      {/* Online Viewer Overlay */}
+      <AnimatePresence>
+        {isViewingOnline && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black flex flex-col"
+          >
+            <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10">
+              <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                Live Feed: Online Viewer Net4
+              </div>
+              <button 
+                onClick={() => setIsViewingOnline(false)}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <iframe 
+              src="/online_viewer_net4.htm" 
+              className="flex-1 w-full h-full border-none"
+              title="Online Viewer"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top Header */}
+
       <div className="absolute top-10 left-10 z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
