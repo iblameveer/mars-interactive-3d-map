@@ -440,9 +440,10 @@ export function MarsMap() {
             dampingFactor={0.05}
           />
           
-          <ambientLight intensity={0.1} />
-          <pointLight position={[10, 10, 10]} intensity={2} color="#fff5e6" />
-          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} color="#ff7f50" />
+          <ambientLight intensity={0.6} />
+          <pointLight position={[10, 5, 10]} intensity={4} color="#fff5e6" castShadow />
+          <spotLight position={[-10, 10, 10]} angle={0.25} penumbra={1} intensity={2.5} color="#ff7f50" />
+          <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
           
           <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
           
