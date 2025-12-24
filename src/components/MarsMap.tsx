@@ -18,81 +18,83 @@ function createProceduralMarsTextures() {
   colorCanvas.height = size;
   const colorCtx = colorCanvas.getContext("2d")!;
   
-  // Base color (Deep Mars Rust)
-  colorCtx.fillStyle = "#4a1c12";
+  // Base color (Deep Mars Rust - significantly brightened)
+  colorCtx.fillStyle = "#8b4513";
   colorCtx.fillRect(0, 0, size, size);
   
   // High-frequency noise for surface grit
-  for (let i = 0; i < 40000; i++) {
+  for (let i = 0; i < 80000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 2;
-    colorCtx.fillStyle = Math.random() > 0.5 ? "#5d251a" : "#3a150d";
-    colorCtx.globalAlpha = 0.5;
+    const radius = Math.random() * 1.5;
+    colorCtx.fillStyle = Math.random() > 0.5 ? "#a0522d" : "#6b4226";
+    colorCtx.globalAlpha = 0.4;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
   }
 
-  // Medium-frequency variance
-  for (let i = 0; i < 15000; i++) {
+  // Medium-frequency variance (Brighter tones)
+  for (let i = 0; i < 20000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 40;
-    const colors = ["#8b4513", "#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e"];
+    const radius = Math.random() * 60;
+    const colors = ["#cd853f", "#d2691e", "#b8860b", "#a0522d", "#bc8f8f", "#8b4513"];
     colorCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-    colorCtx.globalAlpha = Math.random() * 0.3;
+    colorCtx.globalAlpha = Math.random() * 0.25;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
   }
   
   // Large scale geological regions
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 40; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 400 + 200;
+    const radius = Math.random() * 600 + 300;
     const grad = colorCtx.createRadialGradient(x, y, 0, x, y, radius);
-    grad.addColorStop(0, "rgba(26, 15, 8, 0.4)");
-    grad.addColorStop(1, "rgba(26, 15, 8, 0)");
+    grad.addColorStop(0, "rgba(60, 30, 10, 0.5)");
+    grad.addColorStop(0.5, "rgba(100, 50, 20, 0.2)");
+    grad.addColorStop(1, "rgba(100, 50, 20, 0)");
     colorCtx.fillStyle = grad;
     colorCtx.fillRect(0, 0, size, size);
   }
   
   // Craters
-  for (let i = 0; i < 1200; i++) {
+  for (let i = 0; i < 1500; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 15 + 2;
+    const radius = Math.random() * 12 + 1;
     
     // Crater floor
-    colorCtx.fillStyle = "#1a0f08";
-    colorCtx.globalAlpha = 0.7;
+    colorCtx.fillStyle = "#2a150d";
+    colorCtx.globalAlpha = 0.6;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
     
     // Rim highlight
-    colorCtx.strokeStyle = "#8b4513";
-    colorCtx.globalAlpha = 0.2;
-    colorCtx.lineWidth = 2;
+    colorCtx.strokeStyle = "#deb887";
+    colorCtx.globalAlpha = 0.3;
+    colorCtx.lineWidth = 1.5;
     colorCtx.stroke();
   }
 
-  // Polar Ice Caps (Simplified)
-  // North
-  const northGrad = colorCtx.createRadialGradient(size/2, 0, 0, size/2, 0, 300);
-  northGrad.addColorStop(0, "rgba(255, 240, 240, 0.8)");
-  northGrad.addColorStop(1, "rgba(255, 240, 240, 0)");
-  colorCtx.fillStyle = northGrad;
-  colorCtx.fillRect(0, 0, size, 300);
+  // Polar Ice Caps (Enhanced)
+  const drawCap = (yPos: number, reverse: boolean) => {
+    const grad = colorCtx.createRadialGradient(size/2, yPos, 0, size/2, yPos, 400);
+    grad.addColorStop(0, "rgba(255, 250, 250, 0.9)");
+    grad.addColorStop(0.4, "rgba(255, 250, 250, 0.5)");
+    grad.addColorStop(1, "rgba(255, 250, 250, 0)");
+    colorCtx.fillStyle = grad;
+    colorCtx.globalAlpha = 1.0;
+    colorCtx.beginPath();
+    colorCtx.ellipse(size/2, yPos, size/2, 200, 0, 0, Math.PI * 2);
+    colorCtx.fill();
+  }
   
-  // South
-  const southGrad = colorCtx.createRadialGradient(size/2, size, 0, size/2, size, 300);
-  southGrad.addColorStop(0, "rgba(255, 240, 240, 0.8)");
-  southGrad.addColorStop(1, "rgba(255, 240, 240, 0)");
-  colorCtx.fillStyle = southGrad;
-  colorCtx.fillRect(0, size - 300, size, 300);
+  drawCap(0, false);
+  drawCap(size, true);
 
   // Bump Map (Greyscale)
   const bumpCanvas = document.createElement("canvas");
@@ -102,13 +104,13 @@ function createProceduralMarsTextures() {
   bumpCtx.fillStyle = "#808080";
   bumpCtx.fillRect(0, 0, size, size);
   
-  for (let i = 0; i < 20000; i++) {
+  for (let i = 0; i < 30000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 25;
+    const radius = Math.random() * 30;
     const grey = Math.floor(Math.random() * 255);
     bumpCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
-    bumpCtx.globalAlpha = 0.1;
+    bumpCtx.globalAlpha = 0.15;
     bumpCtx.beginPath();
     bumpCtx.arc(x, y, radius, 0, Math.PI * 2);
     bumpCtx.fill();
@@ -116,6 +118,9 @@ function createProceduralMarsTextures() {
 
   const mapTexture = new THREE.CanvasTexture(colorCanvas);
   const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+  
+  mapTexture.colorSpace = THREE.SRGBColorSpace;
+  mapTexture.anisotropy = 8;
   
   return { map: mapTexture, bump: bumpTexture };
 }
