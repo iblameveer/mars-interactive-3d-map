@@ -6,10 +6,10 @@ import { OrbitControls, Stars, Html, PerspectiveCamera, Float, useTexture, Cente
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Reliable Mars textures from three-globe project
+// Reliable Mars textures using JSDelivr CDN for stability and CORS
 const MARS_TEXTURES = {
-  map: "https://unpkg.com/three-globe/example/img/mars-color.jpg",
-  bump: "https://unpkg.com/three-globe/example/img/mars-topo.jpg",
+  map: "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/mars-color.jpg",
+  bump: "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/mars-topo.jpg",
 };
 
 const POIS = [
