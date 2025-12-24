@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, Suspense } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera, Float, useTexture } from "@react-three/drei";
+import { OrbitControls, Stars, Html, PerspectiveCamera, Float, useTexture, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
