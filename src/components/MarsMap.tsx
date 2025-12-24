@@ -135,24 +135,26 @@ export function MarsMap() {
 
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-sans">
-      <Canvas shadows>
-        <PerspectiveCamera makeDefault position={[0, 0, 2.5]} />
-        <OrbitControls 
-          enablePan={false} 
-          minDistance={1.5} 
-          maxDistance={4}
-          autoRotate={!selectedPoi}
-          autoRotateSpeed={0.5}
-        />
-        
-        <ambientLight intensity={0.2} />
-        <pointLight position={[10, 10, 10]} intensity={1.5} />
-        <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-        
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-        
-        <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-      </Canvas>
+        <Canvas shadows>
+          <PerspectiveCamera makeDefault position={[0, 0, 2.5]} />
+          <OrbitControls 
+            enablePan={false} 
+            minDistance={1.5} 
+            maxDistance={4}
+            autoRotate={!selectedPoi}
+            autoRotateSpeed={0.5}
+          />
+          
+          <ambientLight intensity={0.2} />
+          <pointLight position={[10, 10, 10]} intensity={1.5} />
+          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
+          
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          
+          <Suspense fallback={null}>
+            <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+          </Suspense>
+        </Canvas>
 
       {/* UI Overlay */}
       <div className="absolute top-8 left-8 z-10">
