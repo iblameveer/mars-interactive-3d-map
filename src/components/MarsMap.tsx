@@ -39,7 +39,7 @@ function createProceduralMarsTextures() {
     colorCtx.fill();
   }
 
-  // Medium-frequency variance (Brighter and darker tones)
+  // Medium-frequency variance
   for (let i = 0; i < 30000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
@@ -52,7 +52,7 @@ function createProceduralMarsTextures() {
     colorCtx.fill();
   }
   
-  // Large scale geological regions (Dark plains vs Red plateaus)
+  // Large scale geological regions
   for (let i = 0; i < 60; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
@@ -65,20 +65,18 @@ function createProceduralMarsTextures() {
     colorCtx.fillRect(0, 0, size, size);
   }
   
-  // Craters (High quality)
+  // Craters
   for (let i = 0; i < 2500; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
     const radius = Math.random() * 15 + 1.5;
     
-    // Shadow side
     colorCtx.fillStyle = "#1a0d08";
     colorCtx.globalAlpha = 0.7;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
     
-    // Rim highlight (offset)
     colorCtx.strokeStyle = "#e0c090";
     colorCtx.globalAlpha = 0.4;
     colorCtx.lineWidth = Math.random() * 2 + 0.5;
@@ -104,7 +102,7 @@ function createProceduralMarsTextures() {
   drawCap(0, true);
   drawCap(size, false);
 
-  // Bump Map (Greyscale - more contrast)
+  // Bump Map
   const bumpCanvas = document.createElement("canvas");
   bumpCanvas.width = size;
   bumpCanvas.height = size;
@@ -126,7 +124,6 @@ function createProceduralMarsTextures() {
 
   const mapTexture = new THREE.CanvasTexture(colorCanvas);
   const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
-  
   mapTexture.colorSpace = THREE.SRGBColorSpace;
   mapTexture.anisotropy = 16;
   
@@ -216,7 +213,6 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
         <meshBasicMaterial color={active ? "#ffffff" : poi.color} />
       </mesh>
       
-      {/* Pulse effect */}
       <mesh ref={glowRef}>
         <sphereGeometry args={[0.02, 16, 16]} />
         <meshBasicMaterial color={poi.color} transparent opacity={0.3} />
@@ -272,6 +268,126 @@ function ZoomTracker({ onZoomThreshold }: { onZoomThreshold: () => void }) {
   return null;
 }
 
+const AtmosphereShader = {
+  uniforms: {
+    color: { value: new THREE.Color("#ff7f50") },
+    coeficient: { value: 0.5 },
+    power: { value: 4.0 },
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vEyeVector = normalize(-mvPosition.xyz);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    uniform vec3 color;
+    uniform float coeficient;
+    uniform float power;
+    void main() {
+      float dotProduct = dot(vNormal, vEyeVector);
+      float intensity = pow(coeficient - dotProduct, power);
+      gl_FragColor = vec4(color, intensity);
+    }
+  `
+};
+
+function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, onPoiSelect: (poi: typeof POIS[0]) => void }) {
+  const marsRef = useRef<THREE.Mesh>(null);
+  const textures = useMemo(() => createProceduralMarsTextures(), []);
+
+  useFrame((state, delta) => {
+    if (marsRef.current && !activePoi) {
+      marsRef.current.rotation.y += delta * 0.04;
+    }
+  });
+
+  if (!textures.map || !textures.bump) return null;
+
+  return (
+    <group>
+      <mesh scale={0.99}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshBasicMaterial color="#2a0d08" />
+      </mesh>
+
+      <mesh ref={marsRef}>
+        <sphereGeometry args={[1, 128, 128]} />
+        <meshStandardMaterial 
+          map={textures.map} 
+          bumpMap={textures.bump}
+          bumpScale={0.15}
+          roughness={0.7}
+          metalness={0.15}
+        />
+        {POIS.map((poi) => (
+          <Marker 
+            key={poi.name} 
+            poi={poi} 
+            onClick={() => onPoiSelect(poi)} 
+            active={activePoi?.name === poi.name}
+          />
+        ))}
+      </mesh>
+      
+      <mesh scale={1.08}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <shaderMaterial
+          {...AtmosphereShader}
+          side={THREE.BackSide}
+          transparent
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      <mesh scale={1.03}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshStandardMaterial 
+          color="#ff4500"
+          transparent
+          opacity={0.15}
+          side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      <group rotation={[Math.PI / 2, 0, 0]}>
+        <mesh>
+          <ringGeometry args={[1.2, 1.205, 128]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh rotation={[0, 0, Math.PI / 4]}>
+          <ringGeometry args={[1.25, 1.252, 128]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.05} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+function ScannerHUD() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
+      <div className="absolute top-12 left-12 w-16 h-16 border-t border-l border-white/20" />
+      <div className="absolute top-12 right-12 w-16 h-16 border-t border-r border-white/20" />
+      <div className="absolute bottom-12 left-12 w-16 h-16 border-b border-l border-white/20" />
+      <div className="absolute bottom-12 right-12 w-16 h-16 border-b border-r border-white/20" />
+
+      <motion.div 
+        animate={{ top: ["0%", "100%", "0%"] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent z-0"
+      />
+    </div>
+  );
+}
+
 function TelemetryFeed() {
   const [logs, setLogs] = useState<string[]>([]);
 
@@ -325,16 +441,11 @@ export function MarsMap() {
   const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
 
-  const handleZoomThreshold = () => {
-    setIsViewingOnline(true);
-  };
-
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
         <ScannerHUD />
         <TelemetryFeed />
 
-        {/* Blockchain/Metaverse Status Bar */}
         <div className="absolute top-8 right-8 flex gap-6 z-10 pointer-events-none opacity-60">
           <div className="flex flex-col items-end">
             <div className="text-[8px] uppercase tracking-[0.2em] text-white/40">Blockchain Status</div>
@@ -368,18 +479,17 @@ export function MarsMap() {
           
           <Suspense fallback={null}>
             <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-            <ZoomTracker onZoomThreshold={handleZoomThreshold} />
+            <ZoomTracker onZoomThreshold={() => setIsViewingOnline(true)} />
           </Suspense>
         </Canvas>
 
-      {/* Online Viewer Overlay */}
       <AnimatePresence>
         {isViewingOnline && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[100] bg-black flex flex-col"
+            className="absolute inset-0 z-[100] bg-black flex flex-col pointer-events-auto"
           >
             <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10">
               <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3">
@@ -404,9 +514,7 @@ export function MarsMap() {
         )}
       </AnimatePresence>
 
-      {/* Top Header */}
-
-      <div className="absolute top-10 left-10 z-10">
+      <div className="absolute top-10 left-10 z-10 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -423,9 +531,7 @@ export function MarsMap() {
         </motion.div>
       </div>
 
-      {/* Bottom Interface */}
       <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
-        {/* POI Selector */}
         <div className="flex flex-col gap-3 pointer-events-auto">
           <div className="text-[10px] text-white/20 uppercase tracking-[0.2em] mb-2 ml-4">Select Target</div>
           <div className="flex flex-col gap-1.5">
@@ -470,37 +576,33 @@ export function MarsMap() {
           </AnimatePresence>
         </div>
 
-        {/* POI Info Card */}
         <AnimatePresence mode="wait">
-            {selectedPoi && (
-              <motion.div
-                key={selectedPoi.name}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
+          {selectedPoi && (
+            <motion.div
+              key={selectedPoi.name}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
+            >
+              <button 
+                onClick={() => setSelectedPoi(null)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20"
               >
-                {/* Close Button */}
-                <button 
-                  onClick={() => setSelectedPoi(null)}
-                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
 
-                {/* Corner Accents */}
-                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
-                
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
-                    {selectedPoi.type}
-                  </div>
-                  <div className="h-px flex-1 bg-white/10" />
+              <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
+                  {selectedPoi.type}
                 </div>
-
+                <div className="h-px flex-1 bg-white/10" />
+              </div>
 
               <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
                 {selectedPoi.name}
@@ -525,7 +627,6 @@ export function MarsMap() {
         </AnimatePresence>
       </div>
 
-      {/* Side HUD Stats */}
       <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-end gap-8 opacity-40 pointer-events-none">
         <div className="flex flex-col items-end">
           <div className="text-[9px] text-white/50 uppercase tracking-[0.3em] mb-1">Gravity</div>
