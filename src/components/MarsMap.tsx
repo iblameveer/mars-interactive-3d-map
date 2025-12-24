@@ -6,11 +6,10 @@ import { OrbitControls, Stars, Html, PerspectiveCamera, useTexture } from "@reac
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Reliable Mars textures using JSDelivr CDN for stability and CORS
-// We use a specific version of Three.js to ensure assets exist
+// Reliable Mars textures using Wikimedia and Three.js mirrors
 const MARS_TEXTURES = {
-  map: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r154/examples/textures/planets/mars_1k_color.jpg",
-  bump: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r154/examples/textures/planets/mars_1k_topo.jpg",
+  map: "https://upload.wikimedia.org/wikipedia/commons/3/36/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg",
+  bump: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/mars_1k_color.jpg",
 };
 
 const POIS = [
