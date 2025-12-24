@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo, Suspense, useEffect } from "react";
+import React, { useRef, useState, useMemo, Suspense, useEffect, Component } from "react";
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrbitControls, Stars, Html, PerspectiveCamera, Float, useTexture, Center } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,14 +13,48 @@ const MARS_TEXTURES = {
 };
 
 const POIS = [
-  // ... existing POIs
+  {
+    name: "Olympus Mons",
+    lat: 18.65,
+    lng: 226.2,
+    description: "The largest volcano in the solar system, three times the height of Everest.",
+    color: "#ff4d4d",
+  },
+  {
+    name: "Valles Marineris",
+    lat: -13.9,
+    lng: 300.8,
+    description: "A vast canyon system that would stretch across the entire United States.",
+    color: "#ff944d",
+  },
+  {
+    name: "Jezero Crater",
+    lat: 18.44,
+    lng: 77.45,
+    description: "Landing site of the Perseverance rover; a former river delta where life might have existed.",
+    color: "#4dff4d",
+  },
+  {
+    name: "Gale Crater",
+    lat: -4.59,
+    lng: 137.44,
+    description: "Home to Mount Sharp and landing site of the Curiosity rover.",
+    color: "#4d94ff",
+  },
+  {
+    name: "Hellas Planitia",
+    lat: -42.7,
+    lng: 70.0,
+    description: "One of the largest impact basins in the solar system.",
+    color: "#d14dff",
+  },
 ];
 
 // Simple Error Boundary for Three.js components
 function ErrorFallback() {
   return (
     <Html center>
-      <div className="bg-black/80 text-white p-4 rounded-lg border border-red-500/50 backdrop-blur-md text-center">
+      <div className="bg-black/80 text-white p-4 rounded-lg border border-red-500/50 backdrop-blur-md text-center min-w-[200px]">
         <p className="text-sm font-bold text-red-400">Visualization Error</p>
         <p className="text-[10px] opacity-70 mt-1">Failed to load Mars textures. Please check your connection.</p>
         <button 
@@ -34,7 +68,7 @@ function ErrorFallback() {
   );
 }
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+class ErrorBoundary extends Component<{ children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -149,9 +183,11 @@ export function MarsMap() {
           
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
           
-          <Suspense fallback={null}>
-            <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-          </Suspense>
+            <Suspense fallback={null}>
+              <ErrorBoundary>
+                <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+              </ErrorBoundary>
+            </Suspense>
         </Canvas>
 
       {/* UI Overlay */}
