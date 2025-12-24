@@ -472,24 +472,35 @@ export function MarsMap() {
 
         {/* POI Info Card */}
         <AnimatePresence mode="wait">
-          {selectedPoi && (
-            <motion.div
-              key={selectedPoi.name}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
-            >
-              {/* Corner Accents */}
-              <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
-              
-              <div className="flex items-center gap-3 mb-6">
-                <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
-                  {selectedPoi.type}
+            {selectedPoi && (
+              <motion.div
+                key={selectedPoi.name}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
+              >
+                {/* Close Button */}
+                <button 
+                  onClick={() => setSelectedPoi(null)}
+                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                {/* Corner Accents */}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
+                
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
+                    {selectedPoi.type}
+                  </div>
+                  <div className="h-px flex-1 bg-white/10" />
                 </div>
-                <div className="h-px flex-1 bg-white/10" />
-              </div>
+
 
               <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
                 {selectedPoi.name}
