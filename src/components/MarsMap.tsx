@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // Reliable Mars textures using Wikimedia and Three.js mirrors
 const MARS_TEXTURES = {
   map: "https://upload.wikimedia.org/wikipedia/commons/3/36/Mars_Viking_MDIM21_ClrMosaic_global_1024.jpg",
-  bump: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/mars_1k_color.jpg",
+  bump: "https://unpkg.com/three-globe/example/img/mars-topo.jpg",
 };
 
 const POIS = [
