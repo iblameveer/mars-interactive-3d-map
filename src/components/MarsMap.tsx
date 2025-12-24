@@ -451,14 +451,24 @@ export function MarsMap() {
         <ScannerHUD />
         <TelemetryFeed />
 
-        <div className="absolute top-8 right-8 flex gap-6 z-10 pointer-events-none opacity-60">
+        <div className="absolute top-8 right-8 flex gap-8 z-10 pointer-events-none">
           <div className="flex flex-col items-end">
-            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40">Blockchain Status</div>
-            <div className="text-[10px] text-green-500 font-bold tracking-widest">VALIDATED</div>
+            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Network Layer</div>
+            <div className="text-[11px] text-cyan-400 font-bold tracking-widest flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
+              BLOCKCHAIN-MAINNET
+            </div>
           </div>
           <div className="flex flex-col items-end">
-            <div className="text-[8px] uppercase tracking-[0.2em] text-white/40">Metaverse Sync</div>
-            <div className="text-[10px] text-blue-500 font-bold tracking-widest">REAL-TIME</div>
+            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Environment</div>
+            <div className="text-[11px] text-purple-400 font-bold tracking-widest flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc] animate-pulse" />
+              METAVERSE-L2
+            </div>
+          </div>
+          <div className="flex flex-col items-end border-l border-white/10 pl-8">
+            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Rarity Index</div>
+            <div className="text-[11px] text-orange-500 font-bold tracking-widest">α-7.92</div>
           </div>
         </div>
 
