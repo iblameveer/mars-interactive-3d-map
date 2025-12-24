@@ -224,10 +224,14 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
             <motion.div 
               initial={{ opacity: 0, scale: 0.8, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="px-3 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2 whitespace-nowrap bg-black/80 text-white border-white/20"
+              className="group flex flex-col items-center gap-2"
             >
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: poi.color }} />
-              <span className="text-[11px] tracking-tight uppercase font-['Space_Grotesk']">{poi.name}</span>
+              <div className="w-16 h-16 rounded-full border border-white/20 overflow-hidden bg-black/80 backdrop-blur-sm">
+                <img src={poi.image} alt={poi.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+              </div>
+              <div className="px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-md border border-white/10">
+                <span className="text-[9px] tracking-[0.2em] uppercase font-['Space_Grotesk'] text-white/80">{poi.name}</span>
+              </div>
             </motion.div>
           </div>
         </Html>
@@ -240,10 +244,11 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
             animate={{ opacity: 1, scale: 1 }}
             className="pointer-events-none"
           >
-            <div className="w-24 h-24 rounded-full border-2 border-orange-500 overflow-hidden shadow-[0_0_20px_rgba(251,146,60,0.5)] bg-black">
+            <div className="w-28 h-28 rounded-full border-2 border-orange-500 overflow-hidden shadow-[0_0_30px_rgba(251,146,60,0.4)] bg-black">
               <img src={poi.image} alt={poi.name} className="w-full h-full object-cover" />
             </div>
-            <div className="h-8 w-px bg-orange-500 mx-auto" />
+            <div className="h-6 w-px bg-orange-500 mx-auto" />
+            <div className="w-2 h-2 rounded-full bg-orange-500 mx-auto shadow-[0_0_10px_#f97316]" />
           </motion.div>
         </Html>
       )}
