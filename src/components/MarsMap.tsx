@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useState, useMemo, Suspense, useEffect, Component, ReactNode } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera } from "@react-three/drei";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, Stars, Html, PerspectiveCamera, Float } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -18,71 +18,97 @@ function createProceduralMarsTextures() {
   colorCanvas.height = size;
   const colorCtx = colorCanvas.getContext("2d")!;
   
-  // Base color (Reddish-brown)
-  colorCtx.fillStyle = "#6d321d";
+  // Base color (Deep Mars Rust)
+  colorCtx.fillStyle = "#4a1c12";
   colorCtx.fillRect(0, 0, size, size);
   
-  // Add some variation/noise
+  // High-frequency noise for surface grit
+  for (let i = 0; i < 40000; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 2;
+    colorCtx.fillStyle = Math.random() > 0.5 ? "#5d251a" : "#3a150d";
+    colorCtx.globalAlpha = 0.5;
+    colorCtx.beginPath();
+    colorCtx.arc(x, y, radius, 0, Math.PI * 2);
+    colorCtx.fill();
+  }
+
+  // Medium-frequency variance
   for (let i = 0; i < 15000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
     const radius = Math.random() * 40;
-    const opacity = Math.random() * 0.4;
-    const colors = ["#8b4513", "#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e", "#3e2723"];
+    const colors = ["#8b4513", "#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e"];
     colorCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-    colorCtx.globalAlpha = opacity;
+    colorCtx.globalAlpha = Math.random() * 0.3;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
   }
   
-  // Add some "craters" and dark patches
-  for (let i = 0; i < 800; i++) {
+  // Large scale geological regions
+  for (let i = 0; i < 20; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 12 + 2;
+    const radius = Math.random() * 400 + 200;
+    const grad = colorCtx.createRadialGradient(x, y, 0, x, y, radius);
+    grad.addColorStop(0, "rgba(26, 15, 8, 0.4)");
+    grad.addColorStop(1, "rgba(26, 15, 8, 0)");
+    colorCtx.fillStyle = grad;
+    colorCtx.fillRect(0, 0, size, size);
+  }
+  
+  // Craters
+  for (let i = 0; i < 1200; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 15 + 2;
+    
+    // Crater floor
     colorCtx.fillStyle = "#1a0f08";
-    colorCtx.globalAlpha = 0.6;
+    colorCtx.globalAlpha = 0.7;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
     
-    // Crater rim
-    colorCtx.strokeStyle = "#3e2723";
-    colorCtx.globalAlpha = 0.4;
-    colorCtx.lineWidth = 1;
+    // Rim highlight
+    colorCtx.strokeStyle = "#8b4513";
+    colorCtx.globalAlpha = 0.2;
+    colorCtx.lineWidth = 2;
     colorCtx.stroke();
   }
 
-  // Add some dust storms (white/light patches)
-  for (let i = 0; i < 50; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const radius = Math.random() * 100 + 50;
-    colorCtx.fillStyle = "#d2b48c";
-    colorCtx.globalAlpha = 0.1;
-    colorCtx.beginPath();
-    colorCtx.arc(x, y, radius, 0, Math.PI * 2);
-    colorCtx.fill();
-  }
+  // Polar Ice Caps (Simplified)
+  // North
+  const northGrad = colorCtx.createRadialGradient(size/2, 0, 0, size/2, 0, 300);
+  northGrad.addColorStop(0, "rgba(255, 240, 240, 0.8)");
+  northGrad.addColorStop(1, "rgba(255, 240, 240, 0)");
+  colorCtx.fillStyle = northGrad;
+  colorCtx.fillRect(0, 0, size, 300);
+  
+  // South
+  const southGrad = colorCtx.createRadialGradient(size/2, size, 0, size/2, size, 300);
+  southGrad.addColorStop(0, "rgba(255, 240, 240, 0.8)");
+  southGrad.addColorStop(1, "rgba(255, 240, 240, 0)");
+  colorCtx.fillStyle = southGrad;
+  colorCtx.fillRect(0, size - 300, size, 300);
 
   // Bump Map (Greyscale)
   const bumpCanvas = document.createElement("canvas");
   bumpCanvas.width = size;
   bumpCanvas.height = size;
   const bumpCtx = bumpCanvas.getContext("2d")!;
-  
-  // Base mid-height
   bumpCtx.fillStyle = "#808080";
   bumpCtx.fillRect(0, 0, size, size);
   
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 20000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 30;
+    const radius = Math.random() * 25;
     const grey = Math.floor(Math.random() * 255);
     bumpCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
-    bumpCtx.globalAlpha = 0.2;
+    bumpCtx.globalAlpha = 0.1;
     bumpCtx.beginPath();
     bumpCtx.arc(x, y, radius, 0, Math.PI * 2);
     bumpCtx.fill();
@@ -101,6 +127,7 @@ const POIS = [
     lng: 226.2,
     description: "The largest volcano in the solar system, three times the height of Everest.",
     color: "#ff4d4d",
+    type: "Volcano"
   },
   {
     name: "Valles Marineris",
@@ -108,6 +135,7 @@ const POIS = [
     lng: 300.8,
     description: "A vast canyon system that would stretch across the entire United States.",
     color: "#ff944d",
+    type: "Canyon"
   },
   {
     name: "Jezero Crater",
@@ -115,6 +143,7 @@ const POIS = [
     lng: 77.45,
     description: "Landing site of the Perseverance rover; a former river delta where life might have existed.",
     color: "#4dff4d",
+    type: "Impact Crater"
   },
   {
     name: "Gale Crater",
@@ -122,6 +151,7 @@ const POIS = [
     lng: 137.44,
     description: "Home to Mount Sharp and landing site of the Curiosity rover.",
     color: "#4d94ff",
+    type: "Impact Crater"
   },
   {
     name: "Hellas Planitia",
@@ -129,39 +159,9 @@ const POIS = [
     lng: 70.0,
     description: "One of the largest impact basins in the solar system.",
     color: "#d14dff",
+    type: "Basin"
   },
 ];
-
-// Simple Error Boundary for Three.js components
-function ErrorFallback() {
-  return (
-    <Html center>
-      <div className="bg-black/80 text-white p-4 rounded-lg border border-red-500/50 backdrop-blur-md text-center min-w-[200px]">
-        <p className="text-sm font-bold text-red-400">Visualization Error</p>
-        <p className="text-[10px] opacity-70 mt-1">Failed to load Mars textures. Please check your connection.</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="mt-3 px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-[10px] transition-all"
-        >
-          Retry
-        </button>
-      </div>
-    </Html>
-  );
-}
-
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  render() {
-    if (this.state.hasError) return <ErrorFallback />;
-    return this.props.children;
-  }
-}
-
 
 function latLngToVector3(lat: number, lng: number, radius: number) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -175,6 +175,14 @@ function latLngToVector3(lat: number, lng: number, radius: number) {
 function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => void, active: boolean }) {
   const position = useMemo(() => latLngToVector3(poi.lat, poi.lng, 1.02), [poi.lat, poi.lng]);
   const [hovered, setHovered] = useState(false);
+  const glowRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (glowRef.current) {
+      const s = 1 + Math.sin(state.clock.getElapsedTime() * 4) * 0.2;
+      glowRef.current.scale.set(s, s, s);
+    }
+  });
 
   return (
     <group position={position}>
@@ -189,10 +197,28 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
         <sphereGeometry args={[0.015, 16, 16]} />
         <meshBasicMaterial color={active ? "#ffffff" : poi.color} />
       </mesh>
+      
+      {/* Pulse effect */}
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[0.02, 16, 16]} />
+        <meshBasicMaterial color={poi.color} transparent opacity={0.3} />
+      </mesh>
+
       {(hovered || active) && (
-        <Html distanceFactor={10}>
-          <div className={`px-2 py-1 rounded-md text-[10px] whitespace-nowrap transition-all ${active ? 'bg-white text-black font-bold scale-110' : 'bg-black/80 text-white backdrop-blur-sm'}`}>
-            {poi.name}
+        <Html distanceFactor={10} zIndexRange={[10, 0]}>
+          <div className="pointer-events-none select-none">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className={`px-3 py-1.5 rounded-lg border backdrop-blur-md flex items-center gap-2 whitespace-nowrap transition-all ${
+                active 
+                ? 'bg-white text-black border-white font-bold' 
+                : 'bg-black/80 text-white border-white/20'
+              }`}
+            >
+              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: active ? '#000' : poi.color }} />
+              <span className="text-[11px] tracking-tight uppercase font-['Space_Grotesk']">{poi.name}</span>
+            </motion.div>
           </div>
         </Html>
       )}
@@ -200,27 +226,72 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
   );
 }
 
+const AtmosphereShader = {
+  uniforms: {
+    color: { value: new THREE.Color("#ff7f50") },
+    coeficient: { value: 0.5 },
+    power: { value: 4.0 },
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vEyeVector = normalize(-mvPosition.xyz);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    uniform vec3 color;
+    uniform float coeficient;
+    uniform float power;
+    void main() {
+      float dotProduct = dot(vNormal, vEyeVector);
+      float intensity = pow(coeficient - dotProduct, power);
+      gl_FragColor = vec4(color, intensity);
+    }
+  `
+};
+
 function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, onPoiSelect: (poi: typeof POIS[0]) => void }) {
   const marsRef = useRef<THREE.Mesh>(null);
   const textures = useMemo(() => createProceduralMarsTextures(), []);
+  const { camera } = useThree();
 
   useFrame((state, delta) => {
     if (marsRef.current && !activePoi) {
-      marsRef.current.rotation.y += delta * 0.05;
+      marsRef.current.rotation.y += delta * 0.04;
     }
   });
+
+  useEffect(() => {
+    if (activePoi) {
+      const pos = latLngToVector3(activePoi.lat, activePoi.lng, 2.2);
+      // We don't animate the camera directly here easily with useFrame, but OrbitControls handles it if we target it
+    }
+  }, [activePoi]);
 
   if (!textures.map || !textures.bump) return null;
 
   return (
     <group>
-      <mesh ref={marsRef}>
+      {/* Internal Core Glow */}
+      <mesh scale={0.99}>
         <sphereGeometry args={[1, 64, 64]} />
+        <meshBasicMaterial color="#2a0d08" />
+      </mesh>
+
+      <mesh ref={marsRef}>
+        <sphereGeometry args={[1, 128, 128]} />
         <meshStandardMaterial 
           map={textures.map} 
           bumpMap={textures.bump}
-          bumpScale={0.05}
-          roughness={0.8}
+          bumpScale={0.08}
+          roughness={0.9}
+          metalness={0.1}
         />
         {POIS.map((poi) => (
           <Marker 
@@ -232,114 +303,272 @@ function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, on
         ))}
       </mesh>
       
-      {/* Atmospheric Glow */}
+      {/* Atmosphere Layer 1 (Outer Glow) */}
+      <mesh scale={1.08}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <shaderMaterial
+          {...AtmosphereShader}
+          side={THREE.BackSide}
+          transparent
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+
+      {/* Atmosphere Layer 2 (Soft Haze) */}
       <mesh scale={1.03}>
         <sphereGeometry args={[1, 64, 64]} />
         <meshStandardMaterial 
-          color="#ff7f50"
+          color="#ff4500"
           transparent
-          opacity={0.1}
+          opacity={0.15}
           side={THREE.BackSide}
+          blending={THREE.AdditiveBlending}
         />
       </mesh>
+
+      {/* Decorative Rings / HUD in 3D */}
+      <group rotation={[Math.PI / 2, 0, 0]}>
+        <mesh>
+          <ringGeometry args={[1.2, 1.205, 128]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh rotation={[0, 0, Math.PI / 4]}>
+          <ringGeometry args={[1.25, 1.252, 128]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.05} side={THREE.DoubleSide} />
+        </mesh>
+      </group>
     </group>
+  );
+}
+
+function ScannerHUD() {
+  const lineRef = useRef<HTMLDivElement>(null);
+  
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
+      {/* Crosshair corners */}
+      <div className="absolute top-12 left-12 w-16 h-16 border-t border-l border-white/20" />
+      <div className="absolute top-12 right-12 w-16 h-16 border-t border-r border-white/20" />
+      <div className="absolute bottom-12 left-12 w-16 h-16 border-b border-l border-white/20" />
+      <div className="absolute bottom-12 right-12 w-16 h-16 border-b border-r border-white/20" />
+
+      {/* Scanning Line */}
+      <motion.div 
+        animate={{ top: ["0%", "100%", "0%"] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent z-0"
+      />
+    </div>
+  );
+}
+
+function TelemetryFeed() {
+  const [logs, setLogs] = useState<string[]>([]);
+
+  useEffect(() => {
+    const messages = [
+      "SCANNING SURFACE...",
+      "THERMAL ANOMALY DETECTED",
+      "ORBITAL STABILITY: 100%",
+      "ATMOSPHERIC DENSITY: 0.020 kg/m³",
+      "POI COORDINATES LOCKED",
+      "GEOLOGICAL SURVEY IN PROGRESS",
+      "RADIATION LEVELS: NOMINAL",
+      "DUST STORM WARNING: SECTOR 4",
+      "SIGNAL STRENGTH: -84 dBm",
+      "OXYGEN EXTRACTION: ACTIVE"
+    ];
+
+    const interval = setInterval(() => {
+      setLogs(prev => [messages[Math.floor(Math.random() * messages.length)], ...prev].slice(0, 5));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="absolute top-32 left-8 flex flex-col gap-1.5 pointer-events-none">
+      <AnimatePresence>
+        {logs.map((log, i) => (
+          <motion.div
+            key={log + i}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1 - i * 0.2, x: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-[9px] font-mono text-white/40 tracking-widest flex items-center gap-2"
+          >
+            <div className="w-1 h-1 bg-orange-500/50" />
+            {log}
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
   );
 }
 
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
+  const controlsRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (selectedPoi && controlsRef.current) {
+      const targetPos = latLngToVector3(selectedPoi.lat, selectedPoi.lng, 1);
+      // controlsRef.current.setLookAt(targetPos.x * 2, targetPos.y * 2, targetPos.z * 2, targetPos.x, targetPos.y, targetPos.z, true);
+    }
+  }, [selectedPoi]);
 
   return (
-    <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-sans">
-        <Canvas shadows>
-          <PerspectiveCamera makeDefault position={[0, 0, 2.5]} />
+    <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
+        <ScannerHUD />
+        <TelemetryFeed />
+
+        <Canvas shadows gl={{ antialias: true, alpha: true }}>
+          <PerspectiveCamera makeDefault position={[0, 0, 2.5]} fov={45} />
           <OrbitControls 
+            ref={controlsRef}
             enablePan={false} 
-            minDistance={1.5} 
+            minDistance={1.4} 
             maxDistance={4}
             autoRotate={!selectedPoi}
             autoRotateSpeed={0.5}
+            enableDamping
+            dampingFactor={0.05}
           />
           
-          <ambientLight intensity={0.2} />
-          <pointLight position={[10, 10, 10]} intensity={1.5} />
-          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
+          <ambientLight intensity={0.1} />
+          <pointLight position={[10, 10, 10]} intensity={2} color="#fff5e6" />
+          <spotLight position={[-10, 10, 10]} angle={0.15} penumbra={1} intensity={1} color="#ff7f50" />
           
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
           
-            <Suspense fallback={null}>
-              <ErrorBoundary>
-                <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-              </ErrorBoundary>
-            </Suspense>
+          <Suspense fallback={null}>
+            <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+          </Suspense>
         </Canvas>
 
-      {/* UI Overlay */}
-      <div className="absolute top-8 left-8 z-10">
-        <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic">
-          Mars <span className="text-orange-500">Explorer</span>
-        </h1>
-        <p className="text-zinc-500 text-sm mt-1 max-w-[200px]">
-          An interactive 3D visualization of the Red Planet and its legendary landmarks.
-        </p>
+      {/* Top Header */}
+      <div className="absolute top-10 left-10 z-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-5xl font-['Syncopate'] font-bold tracking-[0.2em] text-white uppercase leading-none">
+            MARS <span className="text-orange-500">EXPLORER</span>
+          </h1>
+          <div className="flex items-center gap-4 mt-4">
+            <div className="h-px w-12 bg-orange-500/50" />
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-medium">
+              Red Planet Geological Survey • 2025.04
+            </p>
+          </div>
+        </motion.div>
       </div>
 
-      <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end z-10 pointer-events-none">
-        <div className="flex flex-col gap-2 pointer-events-auto">
-          {POIS.map((poi) => (
-            <button
-              key={poi.name}
-              onClick={() => setSelectedPoi(poi)}
-              className={`text-left px-4 py-2 rounded-full border transition-all duration-300 backdrop-blur-md ${
-                selectedPoi?.name === poi.name 
-                  ? "bg-white text-black border-white" 
-                  : "bg-white/5 text-white border-white/10 hover:bg-white/10"
-              }`}
-            >
-              <span className="text-xs font-medium uppercase tracking-widest">{poi.name}</span>
-            </button>
-          ))}
-          {selectedPoi && (
-            <button
-              onClick={() => setSelectedPoi(null)}
-              className="text-left px-4 py-2 rounded-full border border-orange-500/50 text-orange-500 bg-orange-500/10 hover:bg-orange-500/20 transition-all pointer-events-auto mt-2"
-            >
-              <span className="text-xs font-medium uppercase tracking-widest">Reset View</span>
-            </button>
-          )}
+      {/* Bottom Interface */}
+      <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
+        {/* POI Selector */}
+        <div className="flex flex-col gap-3 pointer-events-auto">
+          <div className="text-[10px] text-white/20 uppercase tracking-[0.2em] mb-2 ml-4">Select Target</div>
+          <div className="flex flex-col gap-1.5">
+            {POIS.map((poi, idx) => (
+              <motion.button
+                key={poi.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                onClick={() => setSelectedPoi(poi)}
+                className={`group relative text-left px-6 py-2.5 rounded-sm transition-all duration-300 flex items-center gap-4 ${
+                  selectedPoi?.name === poi.name 
+                    ? "text-white" 
+                    : "text-white/40 hover:text-white/80"
+                }`}
+              >
+                {selectedPoi?.name === poi.name && (
+                  <motion.div 
+                    layoutId="active-bg"
+                    className="absolute inset-0 bg-white/5 border-l-2 border-orange-500"
+                  />
+                )}
+                <span className="relative text-[11px] font-bold uppercase tracking-[0.15em]">{poi.name}</span>
+                <span className="relative text-[8px] opacity-30 font-mono">[{poi.lat}, {poi.lng}]</span>
+              </motion.button>
+            ))}
+          </div>
+          
+          <AnimatePresence>
+            {selectedPoi && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                onClick={() => setSelectedPoi(null)}
+                className="mt-4 ml-4 flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                Return to Orbit
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
 
+        {/* POI Info Card */}
         <AnimatePresence mode="wait">
           {selectedPoi && (
             <motion.div
               key={selectedPoi.name}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="bg-black/60 backdrop-blur-xl border border-white/10 p-6 rounded-2xl max-w-sm pointer-events-auto"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
             >
-              <div 
-                className="w-8 h-1 mb-4 rounded-full" 
-                style={{ backgroundColor: selectedPoi.color }}
-              />
-              <h2 className="text-2xl font-bold text-white mb-2">{selectedPoi.name}</h2>
-              <div className="flex gap-4 mb-4 text-[10px] text-zinc-400 uppercase tracking-[0.2em]">
-                <span>Lat: {selectedPoi.lat}°</span>
-                <span>Lng: {selectedPoi.lng}°</span>
+              {/* Corner Accents */}
+              <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
+              <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
+              
+              <div className="flex items-center gap-3 mb-6">
+                <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
+                  {selectedPoi.type}
+                </div>
+                <div className="h-px flex-1 bg-white/10" />
               </div>
-              <p className="text-zinc-300 leading-relaxed text-sm">
+
+              <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
+                {selectedPoi.name}
+              </h2>
+
+              <p className="text-white/60 leading-relaxed text-sm font-light mb-8 font-['Space_Grotesk']">
                 {selectedPoi.description}
               </p>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                <div>
+                  <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Latitude</div>
+                  <div className="text-white font-mono text-xs">{selectedPoi.lat}° N</div>
+                </div>
+                <div>
+                  <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Longitude</div>
+                  <div className="text-white font-mono text-xs">{selectedPoi.lng}° E</div>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Decorative HUD Elements */}
-      <div className="absolute top-0 right-0 p-8 flex flex-col items-end gap-1 opacity-20 pointer-events-none uppercase text-[8px] tracking-[0.3em] text-white">
-        <div>Sector: 42-B</div>
-        <div>Signal: Stable</div>
-        <div>Orbit: 3,390 KM</div>
+      {/* Side HUD Stats */}
+      <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-end gap-8 opacity-40 pointer-events-none">
+        <div className="flex flex-col items-end">
+          <div className="text-[9px] text-white/50 uppercase tracking-[0.3em] mb-1">Gravity</div>
+          <div className="text-2xl font-['Syncopate'] text-white">3.71 <span className="text-[10px]">m/s²</span></div>
+        </div>
+        <div className="flex flex-col items-end">
+          <div className="text-[9px] text-white/50 uppercase tracking-[0.3em] mb-1">Day Length</div>
+          <div className="text-2xl font-['Syncopate'] text-white">24.6 <span className="text-[10px]">HRS</span></div>
+        </div>
+        <div className="flex flex-col items-end">
+          <div className="text-[9px] text-white/50 uppercase tracking-[0.3em] mb-1">Temperature</div>
+          <div className="text-2xl font-['Syncopate'] text-white">-63 <span className="text-[10px]">°C</span></div>
+        </div>
       </div>
     </div>
   );
