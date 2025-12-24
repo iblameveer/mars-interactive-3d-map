@@ -446,10 +446,29 @@ export function MarsMap() {
   const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedPoi(null);
+        setIsViewingOnline(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
         <ScannerHUD />
         <TelemetryFeed />
+        
+        {/* Backdrop for selected state to catch clicks */}
+        {selectedPoi && (
+          <div 
+            className="absolute inset-0 z-0 pointer-events-auto cursor-pointer" 
+            onClick={() => setSelectedPoi(null)}
+          />
+        )}
 
         <div className="absolute top-8 right-8 flex gap-8 z-10 pointer-events-none">
           <div className="flex flex-col items-end">
