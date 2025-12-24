@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React from "react";
 import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
