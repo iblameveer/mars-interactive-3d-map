@@ -7,8 +7,8 @@ import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MARS_TEXTURES = {
-  map: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/mars_1k_color.jpg",
-  bump: "https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/mars_1k_topo.jpg",
+  map: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/textures/planets/mars_1k_color.jpg",
+  bump: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/textures/planets/mars_1k_topo.jpg",
 };
 
 const POIS = [
