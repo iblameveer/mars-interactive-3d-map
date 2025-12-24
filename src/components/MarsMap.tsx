@@ -2,15 +2,85 @@
 
 import React, { useRef, useState, useMemo, Suspense, useEffect, Component, ReactNode } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera, useTexture } from "@react-three/drei";
+import { OrbitControls, Stars, Html, PerspectiveCamera } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Reliable Mars textures using Wikimedia and Three.js mirrors
-const MARS_TEXTURES = {
-  map: "https://unpkg.com/three-globe@2.45.0/example/img/mars-color.jpg",
-  bump: "https://unpkg.com/three-globe@2.45.0/example/img/mars-topo.jpg",
-};
+// Helper to create procedural Mars textures
+function createProceduralMarsTextures() {
+  if (typeof document === "undefined") return { map: null, bump: null };
+
+  const size = 1024;
+  
+  // Color Map
+  const colorCanvas = document.createElement("canvas");
+  colorCanvas.width = size;
+  colorCanvas.height = size;
+  const colorCtx = colorCanvas.getContext("2d")!;
+  
+  // Base color (Reddish-brown)
+  colorCtx.fillStyle = "#8b4513";
+  colorCtx.fillRect(0, 0, size, size);
+  
+  // Add some variation/noise
+  for (let i = 0; i < 8000; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 25;
+    const opacity = Math.random() * 0.3;
+    const colors = ["#a0522d", "#6b4226", "#cd853f", "#5c4033", "#4e342e"];
+    colorCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+    colorCtx.globalAlpha = opacity;
+    colorCtx.beginPath();
+    colorCtx.arc(x, y, radius, 0, Math.PI * 2);
+    colorCtx.fill();
+  }
+  
+  // Add some "craters" and dark patches
+  for (let i = 0; i < 300; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 8 + 2;
+    colorCtx.fillStyle = "#2b1d0e";
+    colorCtx.globalAlpha = 0.5;
+    colorCtx.beginPath();
+    colorCtx.arc(x, y, radius, 0, Math.PI * 2);
+    colorCtx.fill();
+    
+    // Crater rim
+    colorCtx.strokeStyle = "#3e2723";
+    colorCtx.globalAlpha = 0.3;
+    colorCtx.lineWidth = 1;
+    colorCtx.stroke();
+  }
+
+  // Bump Map (Greyscale)
+  const bumpCanvas = document.createElement("canvas");
+  bumpCanvas.width = size;
+  bumpCanvas.height = size;
+  const bumpCtx = bumpCanvas.getContext("2d")!;
+  
+  // Base mid-height
+  bumpCtx.fillStyle = "#808080";
+  bumpCtx.fillRect(0, 0, size, size);
+  
+  for (let i = 0; i < 5000; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const radius = Math.random() * 20;
+    const grey = Math.floor(Math.random() * 255);
+    bumpCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
+    bumpCtx.globalAlpha = 0.15;
+    bumpCtx.beginPath();
+    bumpCtx.arc(x, y, radius, 0, Math.PI * 2);
+    bumpCtx.fill();
+  }
+
+  const mapTexture = new THREE.CanvasTexture(colorCanvas);
+  const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
+  
+  return { map: mapTexture, bump: bumpTexture };
+}
 
 const POIS = [
   {
