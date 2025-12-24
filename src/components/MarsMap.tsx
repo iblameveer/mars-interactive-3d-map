@@ -289,15 +289,15 @@ function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, on
         <meshBasicMaterial color="#2a0d08" />
       </mesh>
 
-      <mesh ref={marsRef}>
-        <sphereGeometry args={[1, 128, 128]} />
-        <meshStandardMaterial 
-          map={textures.map} 
-          bumpMap={textures.bump}
-          bumpScale={0.08}
-          roughness={0.9}
-          metalness={0.1}
-        />
+        <mesh ref={marsRef}>
+          <sphereGeometry args={[1, 128, 128]} />
+          <meshStandardMaterial 
+            map={textures.map} 
+            bumpMap={textures.bump}
+            bumpScale={0.15}
+            roughness={0.7}
+            metalness={0.15}
+          />
         {POIS.map((poi) => (
           <Marker 
             key={poi.name} 
