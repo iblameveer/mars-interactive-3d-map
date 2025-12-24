@@ -19,85 +19,92 @@ function createProceduralMarsTextures() {
   colorCanvas.height = size;
   const colorCtx = colorCanvas.getContext("2d")!;
   
-  // Base color (Deep Mars Rust - significantly brightened)
-  colorCtx.fillStyle = "#8b4513";
+  // Base color (Mars Rust - Layered)
+  const baseGrad = colorCtx.createLinearGradient(0, 0, 0, size);
+  baseGrad.addColorStop(0, "#8b4513");
+  baseGrad.addColorStop(0.5, "#a0522d");
+  baseGrad.addColorStop(1, "#6b4226");
+  colorCtx.fillStyle = baseGrad;
   colorCtx.fillRect(0, 0, size, size);
   
   // High-frequency noise for surface grit
-  for (let i = 0; i < 80000; i++) {
+  for (let i = 0; i < 120000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 1.5;
-    colorCtx.fillStyle = Math.random() > 0.5 ? "#a0522d" : "#6b4226";
-    colorCtx.globalAlpha = 0.4;
+    const radius = Math.random() * 1.2;
+    colorCtx.fillStyle = Math.random() > 0.5 ? "#b25a2b" : "#5a3a22";
+    colorCtx.globalAlpha = 0.5;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
   }
 
-  // Medium-frequency variance (Brighter tones)
-  for (let i = 0; i < 20000; i++) {
+  // Medium-frequency variance (Brighter and darker tones)
+  for (let i = 0; i < 30000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 60;
-    const colors = ["#cd853f", "#d2691e", "#b8860b", "#a0522d", "#bc8f8f", "#8b4513"];
+    const radius = Math.random() * 80;
+    const colors = ["#cd853f", "#d2691e", "#b8860b", "#a0522d", "#3d1f05", "#8b4513"];
     colorCtx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
-    colorCtx.globalAlpha = Math.random() * 0.25;
+    colorCtx.globalAlpha = Math.random() * 0.3;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
   }
   
-  // Large scale geological regions
-  for (let i = 0; i < 40; i++) {
+  // Large scale geological regions (Dark plains vs Red plateaus)
+  for (let i = 0; i < 60; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 600 + 300;
+    const radius = Math.random() * 800 + 400;
     const grad = colorCtx.createRadialGradient(x, y, 0, x, y, radius);
-    grad.addColorStop(0, "rgba(60, 30, 10, 0.5)");
-    grad.addColorStop(0.5, "rgba(100, 50, 20, 0.2)");
+    grad.addColorStop(0, Math.random() > 0.7 ? "rgba(40, 20, 5, 0.6)" : "rgba(180, 90, 40, 0.3)");
+    grad.addColorStop(0.7, "rgba(100, 50, 20, 0.1)");
     grad.addColorStop(1, "rgba(100, 50, 20, 0)");
     colorCtx.fillStyle = grad;
     colorCtx.fillRect(0, 0, size, size);
   }
   
-  // Craters
-  for (let i = 0; i < 1500; i++) {
+  // Craters (High quality)
+  for (let i = 0; i < 2500; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 12 + 1;
+    const radius = Math.random() * 15 + 1.5;
     
-    // Crater floor
-    colorCtx.fillStyle = "#2a150d";
-    colorCtx.globalAlpha = 0.6;
+    // Shadow side
+    colorCtx.fillStyle = "#1a0d08";
+    colorCtx.globalAlpha = 0.7;
     colorCtx.beginPath();
     colorCtx.arc(x, y, radius, 0, Math.PI * 2);
     colorCtx.fill();
     
-    // Rim highlight
-    colorCtx.strokeStyle = "#deb887";
-    colorCtx.globalAlpha = 0.3;
-    colorCtx.lineWidth = 1.5;
+    // Rim highlight (offset)
+    colorCtx.strokeStyle = "#e0c090";
+    colorCtx.globalAlpha = 0.4;
+    colorCtx.lineWidth = Math.random() * 2 + 0.5;
+    colorCtx.beginPath();
+    colorCtx.arc(x + radius * 0.2, y - radius * 0.2, radius, 0, Math.PI * 2);
     colorCtx.stroke();
   }
 
-  // Polar Ice Caps (Enhanced)
-  const drawCap = (yPos: number, reverse: boolean) => {
-    const grad = colorCtx.createRadialGradient(size/2, yPos, 0, size/2, yPos, 400);
-    grad.addColorStop(0, "rgba(255, 250, 250, 0.9)");
-    grad.addColorStop(0.4, "rgba(255, 250, 250, 0.5)");
-    grad.addColorStop(1, "rgba(255, 250, 250, 0)");
+  // Polar Ice Caps
+  const drawCap = (yPos: number, isNorth: boolean) => {
+    const grad = colorCtx.createRadialGradient(size/2, yPos, 0, size/2, yPos, 500);
+    grad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    grad.addColorStop(0.3, "rgba(240, 248, 255, 0.7)");
+    grad.addColorStop(0.6, "rgba(200, 220, 255, 0.3)");
+    grad.addColorStop(1, "rgba(255, 255, 255, 0)");
     colorCtx.fillStyle = grad;
     colorCtx.globalAlpha = 1.0;
     colorCtx.beginPath();
-    colorCtx.ellipse(size/2, yPos, size/2, 200, 0, 0, Math.PI * 2);
+    colorCtx.ellipse(size/2, yPos, size/2, isNorth ? 180 : 220, 0, 0, Math.PI * 2);
     colorCtx.fill();
   }
   
-  drawCap(0, false);
-  drawCap(size, true);
+  drawCap(0, true);
+  drawCap(size, false);
 
-  // Bump Map (Greyscale)
+  // Bump Map (Greyscale - more contrast)
   const bumpCanvas = document.createElement("canvas");
   bumpCanvas.width = size;
   bumpCanvas.height = size;
@@ -105,13 +112,13 @@ function createProceduralMarsTextures() {
   bumpCtx.fillStyle = "#808080";
   bumpCtx.fillRect(0, 0, size, size);
   
-  for (let i = 0; i < 30000; i++) {
+  for (let i = 0; i < 40000; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const radius = Math.random() * 30;
-    const grey = Math.floor(Math.random() * 255);
+    const radius = Math.random() * 40;
+    const grey = Math.floor(Math.random() * 100) + (Math.random() > 0.5 ? 155 : 0);
     bumpCtx.fillStyle = `rgb(${grey},${grey},${grey})`;
-    bumpCtx.globalAlpha = 0.15;
+    bumpCtx.globalAlpha = 0.2;
     bumpCtx.beginPath();
     bumpCtx.arc(x, y, radius, 0, Math.PI * 2);
     bumpCtx.fill();
@@ -121,7 +128,7 @@ function createProceduralMarsTextures() {
   const bumpTexture = new THREE.CanvasTexture(bumpCanvas);
   
   mapTexture.colorSpace = THREE.SRGBColorSpace;
-  mapTexture.anisotropy = 8;
+  mapTexture.anisotropy = 16;
   
   return { map: mapTexture, bump: bumpTexture };
 }
@@ -133,7 +140,8 @@ const POIS = [
     lng: 226.2,
     description: "The largest volcano in the solar system, three times the height of Everest.",
     color: "#ff4d4d",
-    type: "Volcano"
+    type: "Volcano",
+    image: "https://images-assets.nasa.gov/image/PIA02032/PIA02032~medium.jpg"
   },
   {
     name: "Valles Marineris",
@@ -141,7 +149,8 @@ const POIS = [
     lng: 300.8,
     description: "A vast canyon system that would stretch across the entire United States.",
     color: "#ff944d",
-    type: "Canyon"
+    type: "Canyon",
+    image: "https://images-assets.nasa.gov/image/PIA04353/PIA04353~medium.jpg"
   },
   {
     name: "Jezero Crater",
@@ -149,7 +158,8 @@ const POIS = [
     lng: 77.45,
     description: "Landing site of the Perseverance rover; a former river delta where life might have existed.",
     color: "#4dff4d",
-    type: "Impact Crater"
+    type: "Impact Crater",
+    image: "https://images-assets.nasa.gov/image/PIA24467/PIA24467~medium.jpg"
   },
   {
     name: "Gale Crater",
@@ -157,7 +167,8 @@ const POIS = [
     lng: 137.44,
     description: "Home to Mount Sharp and landing site of the Curiosity rover.",
     color: "#4d94ff",
-    type: "Impact Crater"
+    type: "Impact Crater",
+    image: "https://images-assets.nasa.gov/image/PIA19920/PIA19920~medium.jpg"
   },
   {
     name: "Hellas Planitia",
@@ -165,7 +176,8 @@ const POIS = [
     lng: 70.0,
     description: "One of the largest impact basins in the solar system.",
     color: "#d14dff",
-    type: "Basin"
+    type: "Basin",
+    image: "https://images-assets.nasa.gov/image/PIA03612/PIA03612~medium.jpg"
   },
 ];
 
