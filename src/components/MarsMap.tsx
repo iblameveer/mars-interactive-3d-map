@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useRef, useState, useMemo, Suspense, useEffect, Component } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera, Float, useTexture, Center } from "@react-three/drei";
+import React, { useRef, useState, useMemo, Suspense, useEffect, Component, ReactNode } from "react";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { OrbitControls, Stars, Html, PerspectiveCamera, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Reliable Mars textures using JSDelivr CDN for stability and CORS
+// We use a specific version of Three.js to ensure assets exist
 const MARS_TEXTURES = {
-  map: "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/mars-color.jpg",
-  bump: "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/mars-topo.jpg",
+  map: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r154/examples/textures/planets/mars_1k_color.jpg",
+  bump: "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r154/examples/textures/planets/mars_1k_topo.jpg",
 };
 
 const POIS = [
