@@ -264,20 +264,12 @@ const AtmosphereShader = {
 function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, onPoiSelect: (poi: typeof POIS[0]) => void }) {
   const marsRef = useRef<THREE.Mesh>(null);
   const textures = useMemo(() => createProceduralMarsTextures(), []);
-  const { camera } = useThree();
 
   useFrame((state, delta) => {
     if (marsRef.current && !activePoi) {
       marsRef.current.rotation.y += delta * 0.04;
     }
   });
-
-  useEffect(() => {
-    if (activePoi) {
-      const pos = latLngToVector3(activePoi.lat, activePoi.lng, 2.2);
-      // We don't animate the camera directly here easily with useFrame, but OrbitControls handles it if we target it
-    }
-  }, [activePoi]);
 
   if (!textures.map || !textures.bump) return null;
 
@@ -289,15 +281,15 @@ function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, on
         <meshBasicMaterial color="#2a0d08" />
       </mesh>
 
-        <mesh ref={marsRef}>
-          <sphereGeometry args={[1, 128, 128]} />
-          <meshStandardMaterial 
-            map={textures.map} 
-            bumpMap={textures.bump}
-            bumpScale={0.15}
-            roughness={0.7}
-            metalness={0.15}
-          />
+      <mesh ref={marsRef}>
+        <sphereGeometry args={[1, 128, 128]} />
+        <meshStandardMaterial 
+          map={textures.map} 
+          bumpMap={textures.bump}
+          bumpScale={0.15}
+          roughness={0.7}
+          metalness={0.15}
+        />
         {POIS.map((poi) => (
           <Marker 
             key={poi.name} 
@@ -347,8 +339,6 @@ function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, on
 }
 
 function ScannerHUD() {
-  const lineRef = useRef<HTMLDivElement>(null);
-  
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center">
       {/* Crosshair corners */}
@@ -414,13 +404,6 @@ function TelemetryFeed() {
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const controlsRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (selectedPoi && controlsRef.current) {
-      const targetPos = latLngToVector3(selectedPoi.lat, selectedPoi.lng, 1);
-      // controlsRef.current.setLookAt(targetPos.x * 2, targetPos.y * 2, targetPos.z * 2, targetPos.x, targetPos.y, targetPos.z, true);
-    }
-  }, [selectedPoi]);
 
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
