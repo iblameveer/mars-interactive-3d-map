@@ -190,13 +190,15 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
 
 function Mars({ activePoi, onPoiSelect }: { activePoi: typeof POIS[0] | null, onPoiSelect: (poi: typeof POIS[0]) => void }) {
   const marsRef = useRef<THREE.Mesh>(null);
-  const textures = useTexture(MARS_TEXTURES);
+  const textures = useMemo(() => createProceduralMarsTextures(), []);
 
   useFrame((state, delta) => {
     if (marsRef.current && !activePoi) {
       marsRef.current.rotation.y += delta * 0.05;
     }
   });
+
+  if (!textures.map || !textures.bump) return null;
 
   return (
     <group>
