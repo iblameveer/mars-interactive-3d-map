@@ -640,9 +640,8 @@ export function MarsMap() {
               </motion.button>
             }
           </AnimatePresence>
-        </div>
 
-        <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
           {selectedPoi &&
           <motion.div
             key={selectedPoi.name}
