@@ -616,7 +616,7 @@ export function MarsMap() {
           className="absolute inset-0 z-[100] bg-black flex flex-col pointer-events-auto">
 
             <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10">
-              <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+              <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3 !whitespace-pre-line">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Live Feed: mars blocks excavation
 
             </div>
