@@ -579,6 +579,80 @@ function LoadingScreen({ onComplete }: {onComplete: () => void;}) {
   );
 }
 
+function ProtocolMenu() {
+  const [isOpen, setIsOpen] = useState(false);
+  const protocols = [
+    { id: "01", name: "GENESIS_RECON", status: "READY" },
+    { id: "02", name: "VOXEL_MAPPING", status: "ACTIVE" },
+    { id: "03", name: "L2_SHARD_SYNC", status: "STABLE" },
+    { id: "04", name: "ATMOS_MINING", status: "PENDING" },
+    { id: "05", name: "CORE_EXTRACTION", status: "LOCKED" },
+  ];
+
+  return (
+    <div className="absolute top-1/2 left-8 -translate-y-1/2 z-[70] flex flex-col gap-4 pointer-events-auto">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="group relative flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 p-3 hover:border-orange-500/50 transition-all duration-300 overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="flex flex-col items-start gap-1 relative z-10">
+          <div className="text-[10px] text-orange-500 font-bold tracking-[0.2em]">PROTOCOL_OVERRIDE</div>
+          <div className="text-[8px] text-white/40 tracking-widest">{isOpen ? "CLOSE_MENU" : "OPEN_UPLINK"}</div>
+        </div>
+        <div className="w-8 h-8 flex items-center justify-center relative z-10">
+          <motion.div 
+            animate={{ rotate: isOpen ? 90 : 0 }}
+            className="w-4 h-px bg-white/40 absolute" 
+          />
+          <motion.div 
+            animate={{ rotate: isOpen ? 0 : 90 }}
+            className="w-4 h-px bg-white/40 absolute" 
+          />
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: -20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -20, scale: 0.95 }}
+            className="flex flex-col gap-2 p-4 bg-black/60 backdrop-blur-xl border border-white/10 min-w-[200px]"
+          >
+            <div className="text-[9px] text-white/30 uppercase tracking-[0.3em] mb-2 px-2">Mission Commands</div>
+            {protocols.map((p, idx) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                className="group flex items-center justify-between p-2 hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-mono text-orange-500/50">{p.id}</span>
+                  <span className="text-[11px] text-white/70 font-bold tracking-widest group-hover:text-white transition-colors">{p.name}</span>
+                </div>
+                <div className={`text-[8px] font-bold tracking-tighter ${
+                  p.status === "ACTIVE" ? "text-cyan-400" : 
+                  p.status === "READY" ? "text-green-400" : 
+                  "text-white/20"
+                }`}>
+                  {p.status}
+                </div>
+              </motion.div>
+            ))}
+            <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-1">
+              <div className="text-[8px] text-white/20 uppercase">Uplink Encryption</div>
+              <div className="text-[10px] text-orange-500/40 font-mono truncate">SHA-256: 0xf3...8a21</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
