@@ -205,31 +205,9 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
             active={activePoi?.name === poi.name}
           />
         ))}
-      </primitive>
-      
-      {/* Atmosphere Glows */}
-      <mesh scale={1.08}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <shaderMaterial
-          {...AtmosphereShader}
-          side={THREE.BackSide}
-          transparent
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      <mesh scale={1.03}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial
-          color="#ff4500"
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      <group rotation={[Math.PI / 2, 0, 0]}>
+        </primitive>
+        
+        <group rotation={[Math.PI / 2, 0, 0]}>
         <mesh>
           <ringGeometry args={[1.2, 1.205, 128]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
