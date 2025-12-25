@@ -194,7 +194,7 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
         <primitive 
           ref={marsRef} 
           object={scene} 
-          scale={0.4} // Increased scale as requested
+          scale={0.4} // Explicitly set to 0.4 as requested
           rotation={[0, 0, 0]}
         >
         {POIS.map((poi) => (
