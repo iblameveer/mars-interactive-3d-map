@@ -464,14 +464,23 @@ function LoadingScreen({ onComplete }: {onComplete: () => void;}) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="absolute inset-0 z-[200] bg-black flex flex-col items-center justify-center font-mono">
+      
+      {/* Scanline overlay */}
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20" />
 
-      <div className="w-96 flex flex-col gap-6">
+      <div className="w-96 flex flex-col gap-6 relative">
         <div className="flex justify-between items-end">
           <div className="flex flex-col gap-1">
-            <div className="text-[10px] text-cyan-500 uppercase tracking-[0.3em] animate-pulse">Establishing Uplink</div>
-            <div className="text-white text-xs tracking-widest font-bold">ORBITAL-DECENT-PROTOCOL.exe</div>
+            <motion.div 
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 0.1, repeat: Infinity }}
+              className="text-[10px] text-cyan-500 uppercase tracking-[0.3em]"
+            >
+              Establishing Uplink
+            </motion.div>
+            <div className="text-white text-xs tracking-widest font-bold">ORBITAL-DESCENT-PROTOCOL.exe</div>
           </div>
-          <div className="text-cyan-500 text-sm font-bold">{Math.floor(progress)}%</div>
+          <div className="text-cyan-500 text-sm font-bold tabular-nums">{Math.floor(progress)}%</div>
         </div>
         
         <div className="h-1 w-full bg-white/5 relative overflow-hidden">
@@ -483,7 +492,6 @@ function LoadingScreen({ onComplete }: {onComplete: () => void;}) {
             animate={{ left: ["-100%", "200%"] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
             className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-
         </div>
 
         <div className="flex flex-col gap-2">
@@ -500,13 +508,20 @@ function LoadingScreen({ onComplete }: {onComplete: () => void;}) {
             <span className={progress > 90 ? "text-cyan-500" : ""}>{progress > 90 ? "INITIALIZING" : "READY"}</span>
           </div>
         </div>
+
+        {/* Glitch overlays */}
+        <motion.div 
+          animate={{ x: [-2, 2, -2], opacity: [0, 0.2, 0] }}
+          transition={{ duration: 0.2, repeat: Infinity }}
+          className="absolute inset-0 border border-cyan-500/20 -m-4 pointer-events-none"
+        />
       </div>
 
       <div className="absolute bottom-12 text-white/10 text-[10px] tracking-[0.5em] uppercase">
         Initializing Metaverse Layer 2 Integration
       </div>
-    </motion.div>);
-
+    </motion.div>
+  );
 }
 
 export function MarsMap() {
