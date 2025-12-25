@@ -626,14 +626,15 @@ export function MarsMap() {
       <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
         <TargetDropdown selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
 
-        <AnimatePresence>
+        <div className="flex flex-col items-end gap-4">
+          <AnimatePresence>
             {selectedPoi &&
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               onClick={() => setSelectedPoi(null)}
-              className="mt-4 ml-4 flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto">
+              className="flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto">
 
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
                 Return to Orbit
@@ -642,54 +643,55 @@ export function MarsMap() {
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
-          {selectedPoi &&
-          <motion.div
-            key={selectedPoi.name}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden">
+            {selectedPoi &&
+            <motion.div
+              key={selectedPoi.name}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden">
 
-              <button
-              onClick={() => setSelectedPoi(null)}
-              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20">
+                <button
+                onClick={() => setSelectedPoi(null)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20">
 
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
 
-              <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
-              
-              <div className="flex items-center gap-3 mb-6">
-                <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
-                  {selectedPoi.type}
+                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
+                
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
+                    {selectedPoi.type}
+                  </div>
+                  <div className="h-px flex-1 bg-white/10" />
                 </div>
-                <div className="h-px flex-1 bg-white/10" />
-              </div>
 
-              <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
-                {selectedPoi.name}
-              </h2>
+                <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
+                  {selectedPoi.name}
+                </h2>
 
-              <p className="text-white/60 leading-relaxed text-sm font-light mb-8 font-['Space_Grotesk']">
-                {selectedPoi.description}
-              </p>
+                <p className="text-white/60 leading-relaxed text-sm font-light mb-8 font-['Space_Grotesk']">
+                  {selectedPoi.description}
+                </p>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
-                <div>
-                  <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Latitude</div>
-                  <div className="text-white font-mono text-xs">{selectedPoi.lat}° N</div>
+                <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                  <div>
+                    <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Latitude</div>
+                    <div className="text-white font-mono text-xs">{selectedPoi.lat}° N</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Longitude</div>
+                    <div className="text-white font-mono text-xs">{selectedPoi.lng}° E</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Longitude</div>
-                  <div className="text-white font-mono text-xs">{selectedPoi.lng}° E</div>
-                </div>
-              </div>
-            </motion.div>
-          }
-        </AnimatePresence>
+              </motion.div>
+            }
+          </AnimatePresence>
+        </div>
       </div>
 
       <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-end gap-8 opacity-40 pointer-events-none">
