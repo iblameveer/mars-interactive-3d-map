@@ -357,8 +357,8 @@ const AtmosphereShader = {
 };
 
 function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPoiSelect: (poi: typeof POIS[0]) => void;}) {
-  const marsRef = useRef<THREE.Mesh>(null);
-  const textures = useMemo(() => createProceduralMarsTextures(), []);
+  const marsRef = useRef<THREE.Group>(null);
+  const { scene } = useGLTF("/models/mars.glb");
 
   useFrame((state, delta) => {
     if (marsRef.current && !activePoi) {
@@ -366,42 +366,33 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
     }
   });
 
-  if (!textures.map || !textures.bump) return null;
-
   return (
     <group>
-      <mesh scale={0.99}>
-        <sphereGeometry args={[1, 64, 64]} />
-        <meshBasicMaterial color="#2a0d08" />
-      </mesh>
-
-      <mesh ref={marsRef}>
-        <sphereGeometry args={[1, 128, 128]} />
-        <meshStandardMaterial
-          map={textures.map}
-          bumpMap={textures.bump}
-          bumpScale={0.15}
-          roughness={0.7}
-          metalness={0.15} />
-
-        {POIS.map((poi) =>
-        <Marker
-          key={poi.name}
-          poi={poi}
-          onClick={() => onPoiSelect(poi)}
-          active={activePoi?.name === poi.name} />
-
-        )}
-      </mesh>
+      <primitive 
+        ref={marsRef} 
+        object={scene} 
+        scale={0.005} // Adjusted scale for GLB models which are often large
+        rotation={[0, 0, 0]}
+      >
+        {POIS.map((poi) => (
+          <Marker
+            key={poi.name}
+            poi={poi}
+            onClick={() => onPoiSelect(poi)}
+            active={activePoi?.name === poi.name}
+          />
+        ))}
+      </primitive>
       
+      {/* Atmosphere Glows */}
       <mesh scale={1.08}>
         <sphereGeometry args={[1, 64, 64]} />
         <shaderMaterial
           {...AtmosphereShader}
           side={THREE.BackSide}
           transparent
-          blending={THREE.AdditiveBlending} />
-
+          blending={THREE.AdditiveBlending}
+        />
       </mesh>
 
       <mesh scale={1.03}>
@@ -411,8 +402,8 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
           transparent
           opacity={0.15}
           side={THREE.BackSide}
-          blending={THREE.AdditiveBlending} />
-
+          blending={THREE.AdditiveBlending}
+        />
       </mesh>
 
       <group rotation={[Math.PI / 2, 0, 0]}>
@@ -425,8 +416,8 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
           <meshBasicMaterial color="#ffffff" transparent opacity={0.05} side={THREE.DoubleSide} />
         </mesh>
       </group>
-    </group>);
-
+    </group>
+  );
 }
 
 function ScannerHUD() {
