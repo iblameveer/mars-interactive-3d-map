@@ -647,8 +647,8 @@ export function MarsMap() {
               </button>
             </div>
             <iframe
-            src="/online_viewer_net4.htm"
-            className="flex-1 w-full h-full border-none"
+            src="/online_viewer_net5.htm"
+            className="flex-1 w-full h-screen border-none"
             title="Online Viewer" />
 
           </motion.div>
