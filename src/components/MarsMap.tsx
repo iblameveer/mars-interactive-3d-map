@@ -348,16 +348,24 @@ function TargetDropdown({ selectedPoi, setSelectedPoi }: { selectedPoi: typeof P
     <div className="flex flex-col gap-3 pointer-events-auto">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="group relative flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 p-3 hover:border-orange-500/50 transition-all duration-300 overflow-hidden min-w-[200px]"
+        className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-orange-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        {/* Decorative corner elements */}
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-orange-500/40" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-orange-500/40" />
+
         <div className="flex flex-col items-start gap-1 relative z-10">
-          <div className="text-[10px] text-orange-500 font-bold tracking-[0.2em]">TARGET_SELECTION</div>
-          <div className="text-[11px] text-white uppercase tracking-widest font-bold">
-            {selectedPoi ? selectedPoi.name : "SELECT_COORDINATES"}
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+            <div className="text-[10px] text-orange-500 font-bold tracking-[0.3em] font-mono">PROTOCOL_OVERRIDE</div>
+          </div>
+          <div className="text-[12px] text-white uppercase tracking-[0.2em] font-bold pl-3.5">
+            {selectedPoi ? selectedPoi.name : "SYSTEM_READY"}
           </div>
         </div>
-        <div className="ml-auto w-8 h-8 flex items-center justify-center relative z-10">
+        <div className="ml-auto w-8 h-8 flex items-center justify-center relative z-10 border-l border-white/5 pl-4">
           <motion.div 
             animate={{ rotate: isOpen ? 180 : 0 }}
             className="text-white/40"
@@ -372,27 +380,42 @@ function TargetDropdown({ selectedPoi, setSelectedPoi }: { selectedPoi: typeof P
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="flex flex-col gap-1.5 p-2 bg-black/60 backdrop-blur-xl border border-white/10 min-w-[200px]"
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
           >
+            {/* Background scanner animation */}
+            <motion.div 
+              animate={{ top: ["0%", "100%", "0%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute left-0 right-0 h-10 bg-gradient-to-b from-transparent via-orange-500/5 to-transparent pointer-events-none"
+            />
+
             {POIS.map((poi, idx) => (
               <motion.button
                 key={poi.name}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.05 }}
+                transition={{ delay: idx * 0.04 }}
                 onClick={() => {
                   setSelectedPoi(poi);
                   setIsOpen(false);
                 }}
-                className={`group relative text-left px-4 py-2 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 ${
-                  selectedPoi?.name === poi.name ? "text-orange-500" : "text-white/40 hover:text-white/80"
+                className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
+                  selectedPoi?.name === poi.name 
+                    ? "border-orange-500 bg-orange-500/5 text-orange-500" 
+                    : "border-transparent text-white/40 hover:text-white/80"
                 }`}
               >
-                <span className="relative text-[11px] font-bold uppercase tracking-[0.15em]">{poi.name}</span>
-                <span className="relative text-[8px] opacity-30 font-mono">[{poi.lat}, {poi.lng}]</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="relative text-[11px] font-bold uppercase tracking-[0.2em]">{poi.name}</span>
+                  <span className="relative text-[7px] opacity-40 font-mono tracking-widest uppercase">{poi.type}</span>
+                </div>
+                <div className="flex flex-col items-end gap-0.5 opacity-30 group-hover:opacity-60 transition-opacity">
+                  <span className="text-[7px] font-mono tracking-tighter">{poi.lat.toFixed(2)}°N</span>
+                  <span className="text-[7px] font-mono tracking-tighter">{poi.lng.toFixed(2)}°E</span>
+                </div>
               </motion.button>
             ))}
           </motion.div>
