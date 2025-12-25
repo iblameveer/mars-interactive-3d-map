@@ -441,8 +441,77 @@ function TelemetryFeed() {
   );
 }
 
+function LoadingScreen({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(onComplete, 500);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute inset-0 z-[200] bg-black flex flex-col items-center justify-center font-mono"
+    >
+      <div className="w-96 flex flex-col gap-6">
+        <div className="flex justify-between items-end">
+          <div className="flex flex-col gap-1">
+            <div className="text-[10px] text-cyan-500 uppercase tracking-[0.3em] animate-pulse">Establishing Uplink</div>
+            <div className="text-white text-xs tracking-widest font-bold">ORBITAL-DECENT-PROTOCOL.exe</div>
+          </div>
+          <div className="text-cyan-500 text-sm font-bold">{Math.floor(progress)}%</div>
+        </div>
+        
+        <div className="h-1 w-full bg-white/5 relative overflow-hidden">
+          <motion.div 
+            className="absolute inset-y-0 left-0 bg-cyan-500"
+            style={{ width: `${progress}%` }}
+          />
+          <motion.div 
+            animate={{ left: ["-100%", "200%"] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+            <span>Sector Syncing</span>
+            <span className={progress > 30 ? "text-cyan-500" : ""}>{progress > 30 ? "COMPLETE" : "SYNCING..."}</span>
+          </div>
+          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+            <span>Thermal Calibration</span>
+            <span className={progress > 60 ? "text-cyan-500" : ""}>{progress > 60 ? "COMPLETE" : "CALIBRATING..."}</span>
+          </div>
+          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+            <span>Voxel Rendering</span>
+            <span className={progress > 90 ? "text-cyan-500" : ""}>{progress > 90 ? "INITIALIZING" : "READY"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-12 text-white/10 text-[10px] tracking-[0.5em] uppercase">
+        Initializing Metaverse Layer 2 Integration
+      </div>
+    </motion.div>
+  );
+}
+
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
 
@@ -451,11 +520,18 @@ export function MarsMap() {
       if (e.key === "Escape") {
         setSelectedPoi(null);
         setIsViewingOnline(false);
+        setIsLoading(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  const handleZoomThreshold = () => {
+    if (!isViewingOnline && !isLoading) {
+      setIsLoading(true);
+    }
+  };
 
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
