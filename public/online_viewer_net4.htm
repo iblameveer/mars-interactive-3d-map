@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mars Rarity Dashboard</title>
+    <title>Mars Voxel Landscape</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,12 +26,9 @@
 
         #dashboard-wrapper {
             position: relative;
-            width: 900px;
-            height: 650px;
-            background: radial-gradient(circle at 50% 50%, #1a1515 0%, #050508 100%);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 0 60px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.5);
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #5a2515 0%, #1a0a05 100%);
             overflow: hidden;
         }
 
@@ -92,20 +89,13 @@
 
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .footer {
-            display: flex;
-            gap: 20px;
-            opacity: 0.5;
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-
+        /* Scanline Overlay */
         .scanlines {
             position: absolute; top:0; left:0; right:0; bottom:0;
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
             background-size: 100% 4px;
             pointer-events: none;
-            opacity: 0.3;
+            opacity: 0.2;
             z-index: 10;
         }
     </style>
@@ -119,18 +109,13 @@
         <div class="header">
             <div class="title-block">
                 <h1>MARS EXCAVATION</h1>
-                <div class="subtitle">SECTOR 9-X // RARITY DISTRIBUTION</div>
+                <div class="subtitle">SECTOR 9-X // SURFACE EXPLORATION</div>
             </div>
             <div class="stats-panel">
                 <div class="stat-item"><span class="live-indicator"></span><span id="ui-status">OPERATIONAL</span></div>
                 <div class="stat-item">YIELD <span class="stat-value" id="ui-yield">0.00</span></div>
                 <div class="stat-item">BLOCKS <span class="stat-value" id="ui-blocks">0</span></div>
             </div>
-        </div>
-        <div class="footer">
-            <span>SYS.VER 5.1.0</span>
-            <span>CONN: STABLE</span>
-            <span>GRAVITY: 0.38G</span>
         </div>
     </div>
 
@@ -148,34 +133,37 @@ let totalYield = 0;
 let totalBlocks = 0;
 
 const config = {
-    gridRadius: 6, 
-    tileSize: 42,
-    zScale: 40,    
-
+    // VISUAL SETUP
+    gridSize: 30,     // Larger grid for landscape
+    tileSize: 30,     // Smaller tiles for more detail
+    zScale: 15,       // Height scale for terrain
+    
     colors: {
-        // 1. Genesis (Orange) - Common
+        // 1. Genesis (Orange)
         genesisTop: '#e66b45',
         genesisSide: '#b54526',
         
-        // 2. Vitalis (Gold) - Uncommon
+        // 2. Vitalis (Gold)
         vitalisTop: '#ffd700',
         vitalisSide: '#b8860b',
-        vitalisGlow: 'rgba(255, 215, 0, 0.3)',
+        vitalisGlow: 'rgba(255, 215, 0, 0.4)',
 
-        // 3. Celestial (Shiny Purple) - Rare
-        celestialTop: '#d8b4fe', // Light Lavender top for shine
-        celestialSide: '#7e22ce', // Deep Purple side
+        // 3. Celestial (Shiny Purple)
+        celestialTop: '#d8b4fe',
+        celestialSide: '#7e22ce',
         celestialGlow: 'rgba(192, 132, 252, 0.8)',
         
-        minedBase: '#2a2a35',
+        minedBase: '#2a1a1a', // Dark crater
         roverBody: '#e1e1e6',
-        roverAccent: '#ff5e3a'
+        roverAccent: '#ff5e3a',
+        skyTop: '#5a2515',
+        skyBottom: '#1a0a05'
     },
     speeds: {
         movement: 0.04,
         miningBase: 0.8,
         multiplierVitalis: 1.5,
-        multiplierCelestial: 3.0 // Takes longer to mine rare blocks
+        multiplierCelestial: 3.0 
     }
 };
 
@@ -184,6 +172,7 @@ let grid = [];
 let particles = [];
 let stars = [];
 let globalTick = 0;
+let craters = [];
 
 const ActorState = { IDLE: 0, MOVING: 1, SCANNING: 2, MINING: 3 };
 let minerActor = {
@@ -196,19 +185,29 @@ let minerActor = {
     facingRight: true
 };
 
-// --- SPHERICAL ISO MATH ---
-function getPlanetHeight(x, y) {
-    const d = Math.sqrt(x*x + y*y);
-    const R = config.gridRadius + 0.2; 
-    if (d > R) return -20;
-    return Math.sqrt(Math.max(0, R*R - d*d)); 
+// --- TERRAIN GENERATION ---
+function getTerrainHeight(x, y) {
+    // Simple terrain generation using sine waves
+    let height = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2;
+    height += Math.sin(x * 0.3 + y * 0.2) * 0.5;
+    
+    // Add craters
+    craters.forEach(crater => {
+        const d = Math.sqrt((x - crater.x)**2 + (y - crater.y)**2);
+        if (d < crater.r) {
+            height -= Math.cos(d / crater.r * Math.PI / 2) * crater.d;
+        }
+    });
+
+    // Add a base height
+    return Math.max(0, height + 1); 
 }
 
-function isoToScreen(gx, gy, zOffset = 0) {
-    const planetZ = getPlanetHeight(gx, gy) * config.zScale;
-    const totalZ = planetZ + zOffset;
-    const x = (gx - gy) * (config.tileSize);
-    const y = (gx + gy) * (config.tileSize * 0.5) - totalZ;
+function isoToScreen(gx, gy, z) {
+    // Standard Isometric Projection on a flat plane
+    const x = (gx - gy) * config.tileSize;
+    const y = (gx + gy) * (config.tileSize * 0.5) - (z * config.zScale);
+    
     return { x: originX + x, y: originY + y };
 }
 
@@ -218,20 +217,22 @@ function dist(p1, p2) {
 
 // --- Init ---
 function resize() {
-    width = canvas.width = document.getElementById('dashboard-wrapper').clientWidth;
-    height = canvas.height = document.getElementById('dashboard-wrapper').clientHeight;
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    
     originX = width / 2;
-    originY = height / 2 + 20; 
+    originY = height / 2 + 100; // Move origin down to see more landscape
+    
     initStars();
 }
 
 function initStars() {
     stars = [];
-    for(let i=0; i<80; i++) {
+    for(let i=0; i<50; i++) {
         stars.push({
             x: Math.random() * width,
-            y: Math.random() * height,
-            size: Math.random() * 2,
+            y: Math.random() * height * 0.6, // Keep stars in the upper sky
+            size: Math.random() * 1.5,
             alpha: Math.random()
         });
     }
@@ -241,26 +242,33 @@ function initGrid() {
     grid = [];
     totalBlocks = 0;
     uiBlocks.innerText = "0";
+    craters = [];
+
+    // Generate some random craters
+    for(let i=0; i<5; i++) {
+        craters.push({
+            x: (Math.random() - 0.5) * config.gridSize * 1.5,
+            y: (Math.random() - 0.5) * config.gridSize * 1.5,
+            r: Math.random() * 5 + 3,
+            d: Math.random() * 3 + 1
+        });
+    }
     
-    const R = config.gridRadius;
+    const S = config.gridSize;
     
-    for (let y = -R; y <= R; y++) {
-        for (let x = -R; x <= R; x++) {
-            if (x*x + y*y > R*R + 0.2) continue;
-            
-            // Rarity Logic
+    for (let y = -S; y <= S; y++) {
+        for (let x = -S; x <= S; x++) {
+            // Calculate height for this block
+            const z = getTerrainHeight(x, y);
+
+            // Rarity Distribution
             const rand = Math.random();
-            let type = 'genesis'; // Default Common (80.6%)
-            
-            if (rand < 0.017) {
-                type = 'celestial'; // Ultra Rare (1.7%)
-            } else if (rand < 0.195) { 
-                // 0.017 + 0.178 = 0.195
-                type = 'vitalis'; // Uncommon (17.8%)
-            }
+            let type = 'genesis'; // Common
+            if (rand < 0.01) type = 'celestial'; // Rare
+            else if (rand < 0.1) type = 'vitalis'; // Uncommon
             
             grid.push({
-                x, y,
+                x, y, z,
                 type: type,
                 health: 100,
                 maxHealth: 100,
@@ -272,9 +280,17 @@ function initGrid() {
     minerActor.targetGridPos = { x: 0, y: 0 };
 }
 
-// --- Drawing ---
+// --- Rendering ---
 
 function drawBackground() {
+    // Draw Sky Gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, config.colors.skyTop);
+    grad.addColorStop(1, config.colors.skyBottom);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Draw Stars
     ctx.fillStyle = '#ffffff';
     stars.forEach(s => {
         ctx.globalAlpha = Math.abs(Math.sin(globalTick * 0.01 + s.x)) * s.alpha;
@@ -283,34 +299,32 @@ function drawBackground() {
         ctx.fill();
     });
     ctx.globalAlpha = 1.0;
+
+    // Draw Distant Mountains (Simple block shapes in the background)
+    ctx.fillStyle = '#2a1a1a'; // Dark silhouette color
+    for(let i=0; i<10; i++) {
+        const mx = (i/10) * width;
+        const my = height * 0.5 + Math.sin(i) * 50;
+        const mw = Math.random() * 200 + 100;
+        const mh = Math.random() * 150 + 50;
+        ctx.beginPath();
+        ctx.moveTo(mx, my);
+        ctx.lineTo(mx + mw/2, my - mh);
+        ctx.lineTo(mx + mw, my);
+        ctx.closePath();
+        ctx.fill();
+    }
 }
 
-function drawPlanetCore() {
-    const visualR = config.gridRadius * config.tileSize * 1.35;
-    ctx.save();
-    ctx.translate(originX, originY);
-    ctx.shadowColor = 'rgba(200, 100, 50, 0.2)';
-    ctx.shadowBlur = 60;
-    const grad = ctx.createRadialGradient(-80, -80, 20, 0, 0, visualR);
-    grad.addColorStop(0, '#5a2515');   
-    grad.addColorStop(0.5, '#2a0a05'); 
-    grad.addColorStop(1, '#050202');   
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(0, 0, visualR, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-}
-
-function drawVoxel(block) {
+function drawVoxel3D(block) {
     if (block.mined) return;
 
-    const pos = isoToScreen(block.x, block.y, 0);
+    const pos = isoToScreen(block.x, block.y, block.z);
     const ts = config.tileSize;
     const hts = ts * 0.5;
-    const voxelHeight = 35; 
+    const voxelHeight = 25; // 3D Thickness
 
-    // Determine Colors based on Type
+    // --- Color Logic ---
     let topColor, sideColor, glowColor = null;
     let pulse = 0;
 
@@ -318,13 +332,11 @@ function drawVoxel(block) {
         topColor = config.colors.celestialTop;
         sideColor = config.colors.celestialSide;
         glowColor = config.colors.celestialGlow;
-        // Fast, intense pulse for rarity
         pulse = Math.sin(globalTick * 0.2) * 4; 
     } else if (block.type === 'vitalis') {
         topColor = config.colors.vitalisTop;
         sideColor = config.colors.vitalisSide;
         glowColor = config.colors.vitalisGlow;
-        // Slow shimmer
         pulse = Math.sin(globalTick * 0.05) * 2;
     } else {
         topColor = config.colors.genesisTop;
@@ -340,20 +352,32 @@ function drawVoxel(block) {
 
     const startY = pos.y + shake - pulse;
 
-    // 1. Sides
-    ctx.fillStyle = sideColor;
-    // Right Face
-    ctx.beginPath(); ctx.moveTo(pos.x, startY + ts); ctx.lineTo(pos.x + ts, startY + hts); ctx.lineTo(pos.x + ts, startY + hts + voxelHeight); ctx.lineTo(pos.x, startY + ts + voxelHeight); ctx.fill();
-    // Left Face
-    ctx.beginPath(); ctx.moveTo(pos.x, startY + ts); ctx.lineTo(pos.x - ts, startY + hts); ctx.lineTo(pos.x - ts, startY + hts + voxelHeight); ctx.lineTo(pos.x, startY + ts + voxelHeight); ctx.fill();
+    // --- DRAW 3D CUBE ---
     
-    // Shading
-    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fill();
+    // 1. Right Face
+    ctx.fillStyle = sideColor;
+    ctx.beginPath();
+    ctx.moveTo(pos.x, startY + ts); 
+    ctx.lineTo(pos.x + ts, startY + hts); 
+    ctx.lineTo(pos.x + ts, startY + hts + voxelHeight); 
+    ctx.lineTo(pos.x, startY + ts + voxelHeight); 
+    ctx.fill();
+    
+    // 2. Left Face
+    ctx.beginPath();
+    ctx.moveTo(pos.x, startY + ts); 
+    ctx.lineTo(pos.x - ts, startY + hts); 
+    ctx.lineTo(pos.x - ts, startY + hts + voxelHeight); 
+    ctx.lineTo(pos.x, startY + ts + voxelHeight); 
+    ctx.fill();
+    
+    // Side Shading (Darken Left)
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; 
+    ctx.fill();
 
-    // 2. Top Surface
+    // 3. Top Face (with shiny gradient)
     const grad = ctx.createLinearGradient(pos.x - ts, startY, pos.x + ts, startY);
-    // Gradient creates the "Shiny" effect
-    grad.addColorStop(0, '#ffffffaa'); // High gloss reflection edge
+    grad.addColorStop(0, '#ffffff99'); // Specular highlight edge
     grad.addColorStop(0.2, topColor);
     grad.addColorStop(1, sideColor);
     ctx.fillStyle = grad;
@@ -365,18 +389,20 @@ function drawVoxel(block) {
     ctx.lineTo(pos.x - ts, startY + hts);
     ctx.fill();
 
-    // 3. Edges
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1; ctx.stroke();
+    // 4. Edges (Crisp 3D look)
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'; 
+    ctx.lineWidth = 1; 
+    ctx.stroke();
 
-    // 4. Glow Effects
+    // 5. Glow (Rare Blocks)
     if (glowColor) {
         ctx.shadowColor = glowColor; 
-        ctx.shadowBlur = block.type === 'celestial' ? 25 : 15;
+        ctx.shadowBlur = block.type === 'celestial' ? 20 : 10;
         ctx.stroke(); 
         ctx.shadowBlur = 0;
     }
 
-    // Scan Overlay
+    // 6. Scanning Effect Overlay
     if (minerActor.state === ActorState.SCANNING && 
         block.x === Math.round(minerActor.targetGridPos.x) && 
         block.y === Math.round(minerActor.targetGridPos.y)) {
@@ -392,7 +418,7 @@ function drawVoxel(block) {
 }
 
 function drawMinedBase(block) {
-    const pos = isoToScreen(block.x, block.y, -10); 
+    const pos = isoToScreen(block.x, block.y, block.z - 0.5); // Slightly lower
     const ts = config.tileSize;
     const hts = ts * 0.5;
 
@@ -403,73 +429,87 @@ function drawMinedBase(block) {
     ctx.lineTo(pos.x, pos.y + 15);
     ctx.lineTo(pos.x - ts, pos.y + hts + 15);
     ctx.fill();
-    ctx.strokeStyle = '#222'; ctx.stroke();
+    ctx.strokeStyle = '#1a0a0a'; ctx.stroke();
 }
 
 function drawRover() {
     const gx = minerActor.gridPos.x;
     const gy = minerActor.gridPos.y;
-    const pos = isoToScreen(gx, gy, 35); 
+    
+    // Find the height at the rover's current position
+    // Interpolate height for smooth movement
+    const floorX = Math.floor(gx);
+    const floorY = Math.floor(gy);
+    const block = grid.find(b => b.x === floorX && b.y === floorY);
+    const z = block ? block.z : 0;
+
+    // Sit on top of block (25 height)
+    const pos = isoToScreen(gx, gy, z); 
     const cx = pos.x;
-    const cy = pos.y + config.tileSize - 10; 
+    const cy = pos.y + config.tileSize - 25; // Adjust for new voxel height
 
     ctx.save();
     ctx.translate(cx, cy);
 
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath(); ctx.ellipse(0, 5, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, 5, 15, 6, 0, 0, Math.PI*2); ctx.fill();
 
-    // Body
+    // Wheels
     ctx.fillStyle = '#111';
-    [-15, 15].forEach(x => { ctx.beginPath(); ctx.arc(x, 0, 6, 0, Math.PI*2); ctx.fill(); });
+    [-10, 10].forEach(x => { ctx.beginPath(); ctx.arc(x, 0, 4, 0, Math.PI*2); ctx.fill(); });
+
+    // Chassis
     ctx.fillStyle = config.colors.roverBody;
-    ctx.beginPath(); ctx.roundRect(-20, -20, 40, 20, 5); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-15, -15, 30, 15, 4); ctx.fill();
 
     // Dome
     ctx.fillStyle = '#87ceeb';
-    ctx.beginPath(); ctx.arc(0, -20, 12, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -15, 8, Math.PI, 0); ctx.fill();
     
     // Alien
     ctx.fillStyle = '#76c754';
-    ctx.beginPath(); ctx.arc(0, -20, 7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -15, 5, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = 'black';
-    ctx.beginPath(); ctx.arc(-2, -21, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(2, -21, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-2, -16, 1.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(2, -16, 1.5, 0, Math.PI*2); ctx.fill();
 
-    // Tools
+    // Scanner Beam
     if (minerActor.state === ActorState.SCANNING) {
         ctx.save();
         const beamAngle = minerActor.facingRight ? Math.PI/4 : -Math.PI/4;
         ctx.rotate(beamAngle * 0.5);
-        let grad = ctx.createLinearGradient(0,0,0,50);
+        let grad = ctx.createLinearGradient(0,0,0,40);
         grad.addColorStop(0, 'rgba(0,243,255,0.5)'); grad.addColorStop(1, 'transparent');
         ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(-20, 50); ctx.lineTo(20, 50); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(-15, 40); ctx.lineTo(15, 40); ctx.fill();
         ctx.restore();
     }
 
+    // Mining Arm
     if (minerActor.state === ActorState.MINING || minerActor.state === ActorState.SCANNING) {
         ctx.save();
-        ctx.translate(15, -10);
+        ctx.translate(10, -8);
         let armAngle = minerActor.state === ActorState.MINING ? Math.sin(globalTick * 0.4) : -0.5;
         ctx.rotate(armAngle);
-        ctx.fillStyle = '#555'; ctx.fillRect(0, -2, 15, 4);
-        ctx.translate(15, 0); ctx.rotate(Math.PI/2);
+        ctx.fillStyle = '#555'; ctx.fillRect(0, -2, 10, 3);
+        ctx.translate(10, 0); ctx.rotate(Math.PI/2);
         ctx.fillStyle = '#444';
-        ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(5, 0); ctx.lineTo(0, 3); ctx.lineTo(-5, 0); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(4, 0); ctx.lineTo(0, 2); ctx.lineTo(-4, 0); ctx.fill();
         ctx.restore();
     }
     ctx.restore();
 }
 
 function createDebris(gx, gy, color) {
-    const pos = isoToScreen(gx, gy, 20);
+    const block = grid.find(b => b.x === Math.round(gx) && b.y === Math.round(gy));
+    const z = block ? block.z : 0;
+    const pos = isoToScreen(gx, gy, z + 0.5);
     for (let i = 0; i < 6; i++) {
         particles.push({
-            x: pos.x, y: pos.y + config.tileSize,
+            x: pos.x, y: pos.y,
             vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 1) * 5,
-            life: 1.0, color: color, size: Math.random() * 4 + 2
+            life: 1.0, color: color, size: Math.random() * 3 + 1
         });
     }
 }
@@ -487,23 +527,34 @@ function updateParticles() {
     ctx.globalAlpha = 1.0;
 }
 
-// --- Logic ---
+// --- Main Loop ---
 function update() {
     globalTick++;
 
+    // IDLE
     if (minerActor.state === ActorState.IDLE) {
         uiStatus.innerText = "OPERATIONAL"; uiStatus.style.color="#fff";
         const candidates = grid.filter(b => !b.mined);
         if (candidates.length === 0) { setTimeout(initGrid, 1000); return; }
 
-        candidates.sort((a, b) => dist(minerActor.gridPos, a) - dist(minerActor.gridPos, b));
-        const target = candidates[Math.floor(Math.random() * Math.min(3, candidates.length))];
-        
+        // Find a target within a reasonable distance
+        let target = null;
+        let minDist = Infinity;
+        for(const b of candidates) {
+            const d = dist(minerActor.gridPos, b);
+            if (d < minDist && d < config.gridSize * 0.8) { // Limit search range
+                minDist = d;
+                target = b;
+            }
+        }
+        if (!target) target = candidates[Math.floor(Math.random() * candidates.length)]; // Fallback
+
         minerActor.targetGridPos = { x: target.x, y: target.y };
         minerActor.state = ActorState.MOVING;
         minerActor.facingRight = target.x >= minerActor.gridPos.x;
     }
 
+    // MOVING
     if (minerActor.state === ActorState.MOVING) {
         uiStatus.innerText = "TRAVERSING"; uiStatus.style.color="#aaa";
         const dx = minerActor.targetGridPos.x - minerActor.gridPos.x;
@@ -519,6 +570,7 @@ function update() {
         }
     }
 
+    // SCANNING
     if (minerActor.state === ActorState.SCANNING) {
         uiStatus.innerText = "SCANNING..."; uiStatus.style.color="#00f3ff";
         minerActor.scanTick++;
@@ -528,6 +580,7 @@ function update() {
         }
     }
 
+    // MINING
     if (minerActor.state === ActorState.MINING) {
         uiStatus.innerText = "EXCAVATING"; uiStatus.style.color="#ff5e3a";
         minerActor.miningTick++;
@@ -536,7 +589,6 @@ function update() {
         const block = grid.find(b => b.x === bx && b.y === by);
 
         if (block && !block.mined) {
-            // Rarity Difficulty Calculation
             let multiplier = 1;
             if (block.type === 'vitalis') multiplier = config.speeds.multiplierVitalis;
             if (block.type === 'celestial') multiplier = config.speeds.multiplierCelestial;
@@ -544,7 +596,6 @@ function update() {
             let dmg = config.speeds.miningBase / multiplier;
             block.health -= dmg;
             
-            // Debris Colors
             if(minerActor.miningTick % 8 === 0) {
                 let color = config.colors.genesisTop;
                 if (block.type === 'vitalis') color = config.colors.vitalisTop;
@@ -555,7 +606,6 @@ function update() {
             if (block.health <= 0) {
                 block.mined = true;
                 totalBlocks++;
-                // Score based on rarity
                 if (block.type === 'genesis') totalYield += 1;
                 else if (block.type === 'vitalis') totalYield += 5;
                 else if (block.type === 'celestial') totalYield += 25;
@@ -572,11 +622,17 @@ function update() {
 function loop() {
     ctx.clearRect(0, 0, width, height);
     drawBackground();
-    drawPlanetCore();
 
-    const sortedGrid = [...grid].sort((a,b) => (a.x + a.y) - (b.x + b.y));
+    // Sort by depth (back-to-front painter's algorithm)
+    // For isometric on terrain, sort by (x + y), then by z height.
+    const sortedGrid = [...grid].sort((a,b) => {
+        const depthA = (a.x + a.y) * config.tileSize - (a.z * config.zScale);
+        const depthB = (b.x + b.y) * config.tileSize - (b.z * config.zScale);
+        return depthA - depthB;
+    });
+
     sortedGrid.filter(b => b.mined).forEach(drawMinedBase);
-    sortedGrid.filter(b => !b.mined).forEach(drawVoxel);
+    sortedGrid.filter(b => !b.mined).forEach(drawVoxel3D);
 
     drawRover();
     updateParticles();
