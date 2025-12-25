@@ -678,9 +678,10 @@ export function MarsMap() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
+    <div className="relative w-full h-screen bg-[#050508] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
         <ScannerHUD />
         <TelemetryFeed />
+        <ProtocolMenu />
         
         {/* Backdrop for selected state to catch clicks */}
         {(selectedPoi || isViewingOnline || isLoading) &&
