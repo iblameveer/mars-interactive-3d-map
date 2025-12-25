@@ -624,35 +624,9 @@ export function MarsMap() {
       </div>
 
       <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
-        <div className="flex flex-col gap-3 pointer-events-auto">
-          <div className="text-[10px] text-white/20 uppercase tracking-[0.2em] mb-2 ml-4">Select Target</div>
-          <div className="flex flex-col gap-1.5">
-            {POIS.map((poi, idx) =>
-            <motion.button
-              key={poi.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              onClick={() => setSelectedPoi(poi)}
-              className={`group relative text-left px-6 py-2.5 rounded-sm transition-all duration-300 flex items-center gap-4 ${
-              selectedPoi?.name === poi.name ?
-              "text-white" :
-              "text-white/40 hover:text-white/80"}`
-              }>
+        <TargetDropdown selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
 
-                {selectedPoi?.name === poi.name &&
-              <motion.div
-                layoutId="active-bg"
-                className="absolute inset-0 bg-white/5 border-l-2 border-orange-500" />
-
-              }
-                <span className="relative text-[11px] font-bold uppercase tracking-[0.15em]">{poi.name}</span>
-                <span className="relative text-[8px] opacity-30 font-mono">[{poi.lat}, {poi.lng}]</span>
-              </motion.button>
-            )}
-          </div>
-          
-          <AnimatePresence>
+        <AnimatePresence>
             {selectedPoi &&
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
