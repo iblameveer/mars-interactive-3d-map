@@ -539,20 +539,25 @@ export function MarsMap() {
         <TelemetryFeed />
         
         {/* Backdrop for selected state to catch clicks */}
-        {selectedPoi && (
+        {(selectedPoi || isViewingOnline || isLoading) && (
           <div 
             className="absolute inset-0 z-0 pointer-events-auto cursor-pointer" 
-            onClick={() => setSelectedPoi(null)}
+            onClick={() => {
+              setSelectedPoi(null);
+              setIsViewingOnline(false);
+              setIsLoading(false);
+            }}
           />
         )}
 
-        <div className="absolute top-8 right-8 flex gap-8 z-10 pointer-events-none">
+        <div className="absolute top-8 right-8 flex gap-8 z-[60] pointer-events-none">
           <div className="flex flex-col items-end">
             <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Network Layer</div>
             <div className="text-[11px] text-cyan-400 font-bold tracking-widest flex items-center gap-2">
               <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
               BLOCKCHAIN-MAINNET
             </div>
+            <div className="text-[7px] text-white/20 mt-1">NODE_ID: 0x72a...1f4</div>
           </div>
           <div className="flex flex-col items-end">
             <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Environment</div>
@@ -560,10 +565,12 @@ export function MarsMap() {
               <div className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc] animate-pulse" />
               METAVERSE-L2
             </div>
+            <div className="text-[7px] text-white/20 mt-1">SYNC_FREQ: 60Hz</div>
           </div>
           <div className="flex flex-col items-end border-l border-white/10 pl-8">
             <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Rarity Index</div>
             <div className="text-[11px] text-orange-500 font-bold tracking-widest">α-7.92</div>
+            <div className="text-[7px] text-white/20 mt-1">QUICK_MINT: ENABLED</div>
           </div>
         </div>
 
@@ -574,7 +581,7 @@ export function MarsMap() {
             enablePan={false} 
             minDistance={1.4} 
             maxDistance={4}
-            autoRotate={!selectedPoi}
+            autoRotate={!selectedPoi && !isViewingOnline && !isLoading}
             autoRotateSpeed={0.5}
             enableDamping
             dampingFactor={0.05}
@@ -589,11 +596,18 @@ export function MarsMap() {
           
           <Suspense fallback={null}>
             <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-            <ZoomTracker onZoomThreshold={() => setIsViewingOnline(true)} />
+            <ZoomTracker onZoomThreshold={handleZoomThreshold} />
           </Suspense>
         </Canvas>
 
       <AnimatePresence>
+        {isLoading && (
+          <LoadingScreen onComplete={() => {
+            setIsLoading(false);
+            setIsViewingOnline(true);
+          }} />
+        )}
+
         {isViewingOnline && (
           <motion.div
             initial={{ opacity: 0 }}
