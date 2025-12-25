@@ -63,7 +63,10 @@ function latLngToVector3(lat: number, lng: number, radius: number) {
   return new THREE.Vector3(x, y, z);
 }
 
-function Marker({ poi, onClick, active }: {poi: typeof POIS[0];onClick: () => void;active: boolean;}) {
+const markerGeometry = new THREE.SphereGeometry(0.015, 16, 16);
+const glowGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+
+const Marker = React.memo(({ poi, onClick, active }: {poi: typeof POIS[0];onClick: () => void;active: boolean;}) => {
   const position = useMemo(() => latLngToVector3(poi.lat, poi.lng, 1.02), [poi.lat, poi.lng]);
   const [hovered, setHovered] = useState(false);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -78,19 +81,17 @@ function Marker({ poi, onClick, active }: {poi: typeof POIS[0];onClick: () => vo
   return (
     <group position={position}>
       <mesh
+        geometry={markerGeometry}
         onClick={(e) => {
           e.stopPropagation();
           onClick();
         }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}>
-
-        <sphereGeometry args={[0.015, 16, 16]} />
         <meshBasicMaterial color={active ? "#ffffff" : poi.color} />
       </mesh>
       
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[0.02, 16, 16]} />
+      <mesh ref={glowRef} geometry={glowGeometry}>
         <meshBasicMaterial color={poi.color} transparent opacity={0.3} />
       </mesh>
 
@@ -129,8 +130,9 @@ function Marker({ poi, onClick, active }: {poi: typeof POIS[0];onClick: () => vo
         </Html>
       }
     </group>);
+});
 
-}
+Marker.displayName = "Marker";
 
 function ZoomTracker({ onZoomThreshold }: {onZoomThreshold: () => void;}) {
   const { camera } = useThree();
