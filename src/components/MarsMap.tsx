@@ -149,36 +149,6 @@ function ZoomTracker({ onZoomThreshold }: {onZoomThreshold: () => void;}) {
   return null;
 }
 
-const AtmosphereShader = {
-  uniforms: {
-    color: { value: new THREE.Color("#ff7f50") },
-    coeficient: { value: 0.5 },
-    power: { value: 4.0 }
-  },
-  vertexShader: `
-    varying vec3 vNormal;
-    varying vec3 vEyeVector;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      vEyeVector = normalize(-mvPosition.xyz);
-      gl_Position = projectionMatrix * mvPosition;
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vNormal;
-    varying vec3 vEyeVector;
-    uniform vec3 color;
-    uniform float coeficient;
-    uniform float power;
-    void main() {
-      float dotProduct = dot(vNormal, vEyeVector);
-      float intensity = pow(coeficient - dotProduct, power);
-      gl_FragColor = vec4(color, intensity);
-    }
-  `
-};
-
 function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPoiSelect: (poi: typeof POIS[0]) => void;}) {
   const marsRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/models/mars.glb");
