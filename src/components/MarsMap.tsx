@@ -7,7 +7,6 @@ import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF } from "@react-t
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Marker helper function
 const POIS = [
 {
   name: "Olympus Mons",
