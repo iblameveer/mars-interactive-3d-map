@@ -8,6 +8,53 @@ import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Marker helper function
+const POIS = [
+{
+  name: "Olympus Mons",
+  lat: 18.65,
+  lng: 226.2,
+  description: "The largest volcano in the solar system, three times the height of Everest.",
+  color: "#ff4d4d",
+  type: "Volcano",
+  image: "https://images-assets.nasa.gov/image/PIA02032/PIA02032~medium.jpg"
+},
+{
+  name: "Valles Marineris",
+  lat: -13.9,
+  lng: 300.8,
+  description: "A vast canyon system that would stretch across the entire United States.",
+  color: "#ff944d",
+  type: "Canyon",
+  image: "https://images-assets.nasa.gov/image/PIA04353/PIA04353~medium.jpg"
+},
+{
+  name: "Jezero Crater",
+  lat: 18.44,
+  lng: 77.45,
+  description: "Landing site of the Perseverance rover; a former river delta where life might have existed.",
+  color: "#4dff4d",
+  type: "Impact Crater",
+  image: "https://images-assets.nasa.gov/image/PIA24467/PIA24467~medium.jpg"
+},
+{
+  name: "Gale Crater",
+  lat: -4.59,
+  lng: 137.44,
+  description: "Home to Mount Sharp and landing site of the Curiosity rover.",
+  color: "#4d94ff",
+  type: "Impact Crater",
+  image: "https://images-assets.nasa.gov/image/PIA19920/PIA19920~medium.jpg"
+},
+{
+  name: "Hellas Planitia",
+  lat: -42.7,
+  lng: 70.0,
+  description: "One of the largest impact basins in the solar system.",
+  color: "#d14dff",
+  type: "Basin",
+  image: "https://images-assets.nasa.gov/image/PIA03612/PIA03612~medium.jpg"
+}];
+
 function latLngToVector3(lat: number, lng: number, radius: number) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
