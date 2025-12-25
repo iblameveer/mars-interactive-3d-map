@@ -222,15 +222,15 @@ function Marker({ poi, onClick, active }: { poi: typeof POIS[0], onClick: () => 
         <Html distanceFactor={10} zIndexRange={[10, 0]}>
           <div className="pointer-events-none select-none">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.8, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="group flex flex-col items-center gap-2"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="group flex flex-col items-center"
             >
-              <div className="w-16 h-16 rounded-full border border-white/20 overflow-hidden bg-black/80 backdrop-blur-sm">
-                <img src={poi.image} alt={poi.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+              <div className="w-24 h-24 rounded-full border-2 border-white/40 overflow-hidden bg-black/80 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] group-hover:border-orange-500/60 group-hover:shadow-[0_0_25px_rgba(251,146,60,0.3)] transition-all duration-500">
+                <img src={poi.image} alt={poi.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 scale-110 group-hover:scale-100 transition-transform duration-700" />
               </div>
-              <div className="px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-md border border-white/10">
-                <span className="text-[9px] tracking-[0.2em] uppercase font-['Space_Grotesk'] text-white/80">{poi.name}</span>
+              <div className="mt-2 flex flex-col items-center">
+                <div className="h-4 w-px bg-gradient-to-b from-white/40 to-transparent" />
               </div>
             </motion.div>
           </div>
