@@ -146,10 +146,40 @@ function ZoomTracker({ onZoomThreshold }: {onZoomThreshold: () => void;}) {
     }
   });
 
-    return null;
-  }
-  
-  function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPoiSelect: (poi: typeof POIS[0]) => void;}) {
+  return null;
+}
+
+const AtmosphereShader = {
+  uniforms: {
+    color: { value: new THREE.Color("#ff7f50") },
+    coeficient: { value: 0.5 },
+    power: { value: 4.0 }
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      vEyeVector = normalize(-mvPosition.xyz);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vNormal;
+    varying vec3 vEyeVector;
+    uniform vec3 color;
+    uniform float coeficient;
+    uniform float power;
+    void main() {
+      float dotProduct = dot(vNormal, vEyeVector);
+      float intensity = pow(coeficient - dotProduct, power);
+      gl_FragColor = vec4(color, intensity);
+    }
+  `
+};
+
+function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPoiSelect: (poi: typeof POIS[0]) => void;}) {
   const marsRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF("/models/mars.glb");
 
@@ -495,9 +525,9 @@ export function MarsMap() {
 
           
           <ambientLight intensity={0.6} />
-          <pointLight position={[10, 5, 10]} intensity={4} color="#fff5e6" castShadow />
-          <spotLight position={[-10, 10, 10]} angle={0.25} penumbra={1} intensity={2.5} color="#ff7f50" />
-          <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
+            <pointLight position={[10, 5, 10]} intensity={4} color="#fff5e6" castShadow />
+            <spotLight position={[-10, 10, 10]} angle={0.25} penumbra={1} intensity={2.5} color="#ffffff" />
+            <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
           
           <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
           
