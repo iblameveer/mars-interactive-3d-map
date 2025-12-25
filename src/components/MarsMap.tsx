@@ -191,12 +191,12 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
 
   return (
     <group>
-      <primitive 
-        ref={marsRef} 
-        object={scene} 
-        scale={0.005} // Adjusted scale for GLB models which are often large
-        rotation={[0, 0, 0]}
-      >
+        <primitive 
+          ref={marsRef} 
+          object={scene} 
+          scale={0.4} // Increased scale as requested
+          rotation={[0, 0, 0]}
+        >
         {POIS.map((poi) => (
           <Marker
             key={poi.name}
