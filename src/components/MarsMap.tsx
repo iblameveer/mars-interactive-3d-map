@@ -199,10 +199,10 @@ function ScannerHUD() {
       <div className="absolute bottom-12 left-12 w-16 h-16 border-b border-l border-white/20" />
       <div className="absolute bottom-12 right-12 w-16 h-16 border-b border-r border-white/20" />
 
-      <motion.div
-        animate={{ top: ["0%", "100%", "0%"] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/20 to-transparent z-0" />
+        <motion.div
+          animate={{ top: ["0%", "100%", "0%"] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
 
     </div>);
 
