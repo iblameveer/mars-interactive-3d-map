@@ -524,8 +524,10 @@ function TargetDropdown({ selectedPoi, setSelectedPoi }: { selectedPoi: typeof P
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
+  const { progress } = useProgress();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -547,7 +549,18 @@ export function MarsMap() {
 
   return (
     <div className="relative w-full h-screen bg-[#050508] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
-        <ScannerHUD />
+      <AnimatePresence>
+        {isInitialLoading && (
+          <LoadingScreen 
+            title="Initializing Mars Uplink"
+            progress={progress}
+            onComplete={() => setIsInitialLoading(false)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <ScannerHUD />
+
         <TelemetryFeed />
         
         {/* Backdrop for selected state to catch clicks */}
