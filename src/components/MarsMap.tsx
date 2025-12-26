@@ -260,84 +260,178 @@ function TelemetryFeed() {
 
 }
 
-function LoadingScreen({ onComplete }: {onComplete: () => void;}) {
-  const [progress, setProgress] = useState(0);
+function LoadingScreen({ onComplete, progress: externalProgress, title = "Establishing Uplink" }: { onComplete: () => void; progress?: number; title?: string }) {
+  const [internalProgress, setInternalProgress] = useState(0);
+  const [logs, setLogs] = useState<string[]>([]);
+  
+  const displayProgress = externalProgress !== undefined ? externalProgress : internalProgress;
 
   useEffect(() => {
+    if (externalProgress === undefined) {
+      const interval = setInterval(() => {
+        setInternalProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(onComplete, 500);
+            return 100;
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    } else if (externalProgress >= 100) {
+      const timeout = setTimeout(onComplete, 800);
+      return () => clearTimeout(timeout);
+    }
+  }, [onComplete, externalProgress]);
+
+  useEffect(() => {
+    const messages = [
+      "DECRYPTING_ORBITAL_VECTORS...",
+      "BYPASSING_ATMOSPHERIC_INTERFERENCE...",
+      "UPLINKING_TO_MARS_RECON_ORBITER...",
+      "INITIALIZING_VOXEL_ENGINE...",
+      "SYNCING_QUANTUM_RECORDS...",
+      "CALIBRATING_THERMAL_SENSORS...",
+      "MAPPING_GEOLOGICAL_ANOMALIES...",
+      "ESTABLISHING_L2_SIDECHAIN_CONNECTION...",
+      "LOADING_TOPOGRAPHIC_MESH...",
+      "AUTHORIZING_PROTOCOL_7-G..."
+    ];
+
     const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(onComplete, 500);
-          return 100;
-        }
-        return prev + Math.random() * 15;
-      });
-    }, 100);
+      if (displayProgress < 100) {
+        setLogs(prev => [messages[Math.floor(Math.random() * messages.length)], ...prev].slice(0, 8));
+      }
+    }, 400);
+
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, [displayProgress]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-[200] bg-black flex flex-col items-center justify-center font-mono">
+      className="absolute inset-0 z-[200] bg-[#050508] flex flex-col items-center justify-center font-mono overflow-hidden">
       
-      {/* Scanline overlay */}
-      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] opacity-20" />
+      {/* Matrix-like background effect */}
+      <div className="absolute inset-0 pointer-events-none opacity-5">
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,255,255,0.1)_50%)] bg-[length:100%_4px] animate-pulse" />
+        <div className="h-full w-full flex flex-wrap gap-4 p-4 text-[8px] text-cyan-500 overflow-hidden leading-none break-all">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} className="opacity-20">
+              {Math.random().toString(36).substring(2, 15)}
+              {Math.random().toString(36).substring(2, 15)}
+              {Math.random().toString(36).substring(2, 15)}
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <div className="w-96 flex flex-col gap-6 relative">
-        <div className="flex justify-between items-end">
+      <div className="w-[450px] flex flex-col gap-8 relative z-10">
+        <div className="flex justify-between items-end border-b border-cyan-500/20 pb-4">
           <div className="flex flex-col gap-1">
             <motion.div 
-              animate={{ opacity: [1, 0.5, 1] }}
+              animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 0.1, repeat: Infinity }}
-              className="text-[10px] text-cyan-500 uppercase tracking-[0.3em]"
+              className="text-[10px] text-cyan-500 uppercase tracking-[0.4em] font-bold"
             >
-              Establishing Uplink
+              {title}
             </motion.div>
-            <div className="text-white text-xs tracking-widest font-bold">ORBITAL-DESCENT-PROTOCOL.exe</div>
+            <div className="text-white/60 text-[9px] tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-cyan-500 animate-ping rounded-full" />
+              SYSTEM://MARS_EXPLORER_v2.5.0
+            </div>
           </div>
-          <div className="text-cyan-500 text-sm font-bold tabular-nums">{Math.floor(progress)}%</div>
+          <div className="flex flex-col items-end">
+            <div className="text-cyan-500 text-2xl font-bold tabular-nums">
+              {Math.floor(displayProgress)}<span className="text-xs ml-1">%</span>
+            </div>
+          </div>
         </div>
         
-        <div className="h-1 w-full bg-white/5 relative overflow-hidden">
+        <div className="h-1.5 w-full bg-white/5 relative overflow-hidden border border-white/10">
           <motion.div
-            className="absolute inset-y-0 left-0 bg-cyan-500"
-            style={{ width: `${progress}%` }} />
-
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+            animate={{ width: `${displayProgress}%` }}
+            transition={{ duration: 0.3 }}
+          />
           <motion.div
             animate={{ left: ["-100%", "200%"] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-            <span>Sector Syncing</span>
-            <span className={progress > 30 ? "text-cyan-500" : ""}>{progress > 30 ? "COMPLETE" : "SYNCING..."}</span>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex flex-col gap-1.5 bg-black/40 border border-white/5 p-4 rounded-sm min-h-[160px]">
+            <div className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] mb-2 border-b border-white/5 pb-1">Uplink Log</div>
+            <AnimatePresence mode="popLayout">
+              {logs.map((log, i) => (
+                <motion.div
+                  key={log + i}
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1 - i * 0.12, x: 0 }}
+                  className="text-[8px] text-white/40 tracking-widest flex items-center gap-2 whitespace-nowrap overflow-hidden"
+                >
+                  <span className="text-cyan-500/40">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                  {log}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-            <span>Thermal Calibration</span>
-            <span className={progress > 60 ? "text-cyan-500" : ""}>{progress > 60 ? "COMPLETE" : "CALIBRATING..."}</span>
-          </div>
-          <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-            <span>Voxel Rendering</span>
-            <span className={progress > 90 ? "text-cyan-500" : ""}>{progress > 90 ? "INITIALIZING" : "READY"}</span>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+                <span>Core Sync</span>
+                <span className={displayProgress > 30 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 30 ? "COMPLETE" : "SYNCING"}</span>
+              </div>
+              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 30 ? "100%" : "30%" }} />
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+                <span>Voxel Grid</span>
+                <span className={displayProgress > 60 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 60 ? "READY" : "LOADING"}</span>
+              </div>
+              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 60 ? "100%" : "60%" }} />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
+                <span>Auth Token</span>
+                <span className={displayProgress > 90 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 90 ? "VERIFIED" : "PENDING"}</span>
+              </div>
+              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 90 ? "100%" : "90%" }} />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Glitch overlays */}
         <motion.div 
-          animate={{ x: [-2, 2, -2], opacity: [0, 0.2, 0] }}
-          transition={{ duration: 0.2, repeat: Infinity }}
-          className="absolute inset-0 border border-cyan-500/20 -m-4 pointer-events-none"
+          animate={{ 
+            opacity: [0, 0.1, 0, 0.15, 0],
+            x: [-1, 1, -1, 2, -1]
+          }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+          className="absolute inset-0 border-2 border-cyan-500/10 -m-8 pointer-events-none"
         />
       </div>
 
-      <div className="absolute bottom-12 text-white/10 text-[10px] tracking-[0.5em] uppercase">
-        Initializing Metaverse Layer 2 Integration
+      <div className="absolute bottom-12 text-cyan-500/20 text-[9px] tracking-[0.6em] uppercase flex flex-col items-center gap-2">
+        <span>Initializing Neural Uplink Integration</span>
+        <div className="flex gap-4">
+          <span className="animate-pulse">LAT: 18.65N</span>
+          <span className="animate-pulse">LNG: 226.2E</span>
+          <span className="animate-pulse">ALT: 21,229M</span>
+        </div>
       </div>
     </motion.div>
   );
