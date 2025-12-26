@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Genesis v5.2 - Satellite Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #0f0;
+            --glass-bg: rgba(12, 12, 20, 0.85);
+            --border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            margin: 0;
+            background-color: #050508;
+            height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+        }
+
+        #dashboard-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas { display: block; }
+
+        /* HUD Overlay Styling */
+        .hud-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 20;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+
+        .title-block h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 1.6rem; color: white; margin: 0;
+            letter-spacing: 4px; text-shadow: 0 0 15px var(--neon-blue);
+        }
+        
+        .title-block .subtitle {
+            color: var(--neon-blue); font-size: 0.9rem; opacity: 0.8; margin-top: 6px;
+            font-weight: 600; letter-spacing: 1px;
+        }
+
+        .stats-panel {
+            background: var(--glass-bg); backdrop-filter: blur(4px);
+            border: 1px solid var(--border-color); padding: 20px 25px;
+            border-radius: 4px; text-align: right; border-right: 4px solid var(--neon-purple);
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
+        }
+
+        .stat-item { margin-bottom: 8px; color: #aaa; font-size: 0.85rem; letter-spacing: 1px; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.1rem; color: white; margin-left: 12px; }
+        .stat-value.neon { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+
+        .live-indicator {
+            display: inline-block; width: 8px; height: 8px;
+            background-color: var(--neon-green); border-radius: 50%;
+            margin-right: 8px; box-shadow: 0 0 10px var(--neon-green);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 0% { opacity: 1; scale: 1.2; } 50% { opacity: 0.4; scale: 1; } 100% { opacity: 1; scale: 1.2; } }
+
+        .footer-hud {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .blockchain-data {
+            background: var(--glass-bg); padding: 15px; border-left: 3px solid var(--neon-blue);
+            font-size: 0.75rem; color: rgba(255,255,255,0.6);
+        }
+
+        .blockchain-data div { margin-bottom: 4px; }
+        .highlight { color: var(--neon-blue); font-weight: bold; }
+
+        .metaverse-sync {
+            text-align: right; color: var(--neon-purple); font-size: 0.8rem;
+            letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        /* --- SATELLITE EFFECTS --- */
+        
+        /* Scanlines & Interlace */
+        .scanlines {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none; opacity: 0.6; z-index: 10;
+        }
+
+        /* Vignette */
+        .vignette {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none; z-index: 11;
+        }
+
+        /* Static Noise */
+        .noise {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* REC Indicator */
+        .rec-indicator {
+            position: absolute; top: 30px; right: 30px;
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Orbitron'; color: #ff3333; font-size: 1.2rem;
+            z-index: 30; letter-spacing: 2px;
+            text-shadow: 0 0 5px #ff3333;
+        }
+        .rec-dot {
+            width: 12px; height: 12px; background-color: #ff3333;
+            border-radius: 50%; animation: blink 1s infinite;
+        }
+
+        /* Crosshairs */
+        .crosshair {
+            position: absolute; width: 40px; height: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 15; pointer-events: none;
+        }
+        .crosshair::before {
+            content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.3);
+        }
+        .crosshair::after {
+            content: ''; position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.3);
+        }
+        .ch-tl { top: 100px; left: 100px; border-right: 0; border-bottom: 0; }
+        .ch-br { bottom: 100px; right: 100px; border-left: 0; border-top: 0; }
+        .center-reticle {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 60px; height: 60px; border: 1px dashed rgba(0, 243, 255, 0.3);
+            border-radius: 50%; pointer-events: none; z-index: 15;
+        }
+
+        /* Alerts */
+        #reinforcement-alert {
+            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
+            color: var(--neon-blue); font-family: 'Orbitron'; font-size: 2rem;
+            text-shadow: 0 0 20px var(--neon-blue); border: 2px solid var(--neon-blue);
+            padding: 20px; background: rgba(0,0,0,0.8); display: none; z-index: 100;
+        }
+        
+        #weather-alert {
+            position: absolute; top: 120px; left: 50%; transform: translate(-50%, 0);
+            color: #ff5e3a; font-family: 'Orbitron'; font-size: 1.2rem;
+            text-shadow: 0 0 10px #ff5e3a; letter-spacing: 3px; display: none; z-index: 90;
+        }
+    </style>
+</head>
+<body>
+
+<div id="dashboard-wrapper">
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="noise"></div>
+    
+    <div class="rec-indicator"><div class="rec-dot"></div>REC [SAT_L2]</div>
+    <div class="crosshair ch-tl"></div>
+    <div class="crosshair ch-br"></div>
+    <div class="center-reticle"></div>
+
+    <div id="reinforcement-alert">REINFORCEMENTS INBOUND</div>
+    <div id="weather-alert">WARNING: DUST STORM DETECTED</div>
+    
+    <div class="hud-layer">
+        <div class="header">
+            <div class="title-block">
+                <h1>GENESIS PROTOCOL</h1>
+                <div class="subtitle">SAT_FEED // OPTICAL_ZOOM_2X</div>
+            </div>
+            <div class="stats-panel">
+                <div class="stat-item"><span class="live-indicator"></span><span id="ui-status">MAINNET_CONNECTED</span></div>
+                <div class="stat-item">HASH_RATE <span class="stat-value neon" id="ui-hash">4.2 EH/s</span></div>
+                <div class="stat-item">ACTIVE_UNITS <span class="stat-value" id="ui-units">12</span></div>
+                <div class="stat-item">STRUCTURES <span class="stat-value" id="ui-structures">0</span></div>
+                <div class="stat-item">MARS_CORES <span class="stat-value" id="ui-blocks">0</span></div>
+                <div class="stat-item">MINT_VALUE <span class="stat-value" id="ui-yield">0.00</span></div>
+            </div>
+        </div>
+
+        <div class="footer-hud">
+            <div class="blockchain-data">
+                <div>NETWORK: <span class="highlight">MARS_CHAIN_L2</span></div>
+                <div>ENV_STATUS: <span class="highlight" id="ui-env">STABLE</span></div>
+                <div>VOXEL_ENGINE: <span class="highlight">v5.2_SAT_VIEW</span></div>
+                <div>SOL_SEQUENCE: <span class="highlight" id="mars-clock">SYNCING...</span></div>
+            </div>
+            <div class="metaverse-sync">
+                METAVERSE_SYNC_ACTIVE // 60HZ<br>
+                VR_SESSION_TIME: <span id="ui-timer">00:00:00</span><br>
+                USER_ID: <span class="highlight">PIONEER_0x88</span>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="miningCanvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('miningCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+const uiYield = document.getElementById('ui-yield');
+const uiBlocks = document.getElementById('ui-blocks');
+const uiStatus = document.getElementById('ui-status');
+const uiTimer = document.getElementById('ui-timer');
+const uiUnits = document.getElementById('ui-units');
+const uiStructs = document.getElementById('ui-structures');
+const uiEnv = document.getElementById('ui-env');
+const marsClock = document.getElementById('mars-clock');
+const alertBox = document.getElementById('reinforcement-alert');
+const weatherBox = document.getElementById('weather-alert');
+
+let totalYield = 0;
+let totalBlocks = 0;
+let totalStructures = 0;
+let startTime = Date.now();
+
+const DAY_DURATION = 720000; 
+let dayCycle = 0; 
+let isStorming = false;
+let stormIntensity = 0;
+let camShakeX = 0;
+let camShakeY = 0;
+let lastStormDayIndex = -1;
+
+const config = {
+    gridSize: 34,
+    tileSize: 28,
+    zScale: 14,
+    colors: {
+        skyDayTop: '#4a2515', skyDayBot: '#150a05', // Darker for cam feed look
+        skyNightTop: '#010103', skyNightBot: '#050510',
+        genesisTop: '#cc5b35', genesisSide: '#a53516',
+        vitalisTop: '#eec700', vitalisSide: '#a8760b',
+        celestialTop: '#c8a4ee', celestialSide: '#6e12be',
+        minedBase: '#1a1a1a'
+    }
+};
+
+let width, height, originX, originY;
+let grid = [], gridMap = new Map(), sortedGrid = [];
+let particles = [], floaters = [], stars = [], craters = [];
+let globalTick = 0;
+
+// --- UTILS ---
+function lerpColor(a, b, amount) {
+    const ah = parseInt(a.replace(/#/g, ''), 16), ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff;
+    const bh = parseInt(b.replace(/#/g, ''), 16), br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff;
+    const rr = ar + amount * (br - ar), rg = ag + amount * (bg - ag), rb = ab + amount * (bb - ab);
+    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + (rb | 0)).toString(16).slice(1);
+}
+
+// --- ACTOR SYSTEM ---
+const ActorState = { IDLE: 0, MOVING: 1, SCANNING: 2, MINING: 3 };
+
+class Miner {
+    constructor(type, x, y) {
+        this.type = type;
+        this.gridPos = { x: x, y: y };
+        this.targetGridPos = { x: x, y: y };
+        this.state = ActorState.IDLE;
+        this.scanTick = 0;
+        this.miningTick = 0;
+        this.facingRight = true;
+        this.targetBlock = null;
+        
+        this.speedBase = type === 'ufo' ? 0.08 : (type === 'bot' ? 0.06 : 0.04);
+        this.miningPower = type === 'ufo' ? 2.0 : (type === 'bot' ? 0.8 : 1.0);
+        this.flyHeight = type === 'ufo' ? 60 : 0;
+    }
+
+    update() {
+        const currentSpeed = isStorming ? this.speedBase * 0.4 : this.speedBase;
+
+        if (this.state === ActorState.IDLE) {
+            const candidates = grid.filter(b => !b.mined && !b.reserved);
+            if (candidates.length > 0) {
+                for(let i=0; i<20; i++) {
+                    const b = candidates[Math.floor(Math.random()*candidates.length)];
+                    if(!this.targetBlock || Math.random() < 0.2) {
+                        this.targetBlock = b;
+                    }
+                }
+                if(this.targetBlock) {
+                    this.targetBlock.reserved = true;
+                    this.targetGridPos = { x: this.targetBlock.x, y: this.targetBlock.y };
+                    this.state = ActorState.MOVING;
+                    this.facingRight = this.targetGridPos.x >= this.gridPos.x;
+                }
+            }
+        }
+
+        if (this.state === ActorState.MOVING) {
+            const dx = this.targetGridPos.x - this.gridPos.x;
+            const dy = this.targetGridPos.y - this.gridPos.y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d < currentSpeed) {
+                this.gridPos.x = this.targetGridPos.x;
+                this.gridPos.y = this.targetGridPos.y;
+                this.state = ActorState.SCANNING;
+                this.scanTick = 0;
+            } else {
+                this.gridPos.x += (dx / d) * currentSpeed;
+                this.gridPos.y += (dy / d) * currentSpeed;
+            }
+        }
+
+        if (this.state === ActorState.SCANNING) {
+            this.scanTick++;
+            if (this.scanTick > (this.type === 'ufo' ? 20 : 40)) {
+                this.state = ActorState.MINING;
+                this.miningTick = 0;
+            }
+        }
+
+        if (this.state === ActorState.MINING) {
+            this.miningTick++;
+            if (this.targetBlock && !this.targetBlock.mined) {
+                let dmg = this.miningPower;
+                if (this.targetBlock.type === 'vitalis') dmg /= 1.5;
+                if (this.targetBlock.type === 'celestial') dmg /= 3.0;
+                this.targetBlock.health -= dmg;
+
+                if (this.miningTick % 8 === 0) {
+                    let c = config.colors.genesisTop;
+                    if(this.targetBlock.type === 'vitalis') c = config.colors.vitalisTop;
+                    else if(this.targetBlock.type === 'celestial') c = config.colors.celestialTop;
+                    createDebris(this.targetBlock.x, this.targetBlock.y, c);
+                }
+
+                if (this.targetBlock.health <= 0) {
+                    this.targetBlock.mined = true;
+                    totalBlocks++;
+                    
+                    let val = 1;
+                    if (this.targetBlock.type === 'vitalis') val = 5;
+                    if (this.targetBlock.type === 'celestial') val = 25;
+                    totalYield += val;
+
+                    uiBlocks.innerText = totalBlocks;
+                    uiYield.innerText = totalYield.toFixed(2);
+                    
+                    createDebris(this.targetBlock.x, this.targetBlock.y, '#fff');
+                    createFloater(this.targetBlock.x, this.targetBlock.y, `+${val}`);
+
+                    const distToCenter = Math.sqrt(this.targetBlock.x**2 + this.targetBlock.y**2);
+                    
+                    if (Math.random() < 0.4) {
+                        let sType = 'solar';
+                        if (distToCenter < 10) {
+                            const rand = Math.random();
+                            if (rand < 0.4) sType = 'charging'; 
+                            else if (rand < 0.7) sType = 'silo';
+                            else sType = 'comms';
+                        } else {
+                            sType = Math.random() < 0.6 ? 'solar' : 'comms';
+                        }
+                        
+                        this.targetBlock.structure = sType;
+                        totalStructures++;
+                        uiStructs.innerText = totalStructures;
+                        createFloater(this.targetBlock.x, this.targetBlock.y, `${sType.toUpperCase()}`, '#0f0');
+                    }
+
+                    this.targetBlock = null;
+                    this.state = ActorState.IDLE;
+                    checkReinforcements();
+                }
+            } else { this.state = ActorState.IDLE; }
+        }
+    }
+
+    draw() {
+        const block = gridMap.get(`${Math.round(this.gridPos.x)},${Math.round(this.gridPos.y)}`);
+        const z = block ? block.z : 0;
+        const pos = isoToScreen(this.gridPos.x, this.gridPos.y, z);
+        const yOffset = this.flyHeight + (this.type === 'ufo' ? Math.sin(globalTick * 0.1) * 10 : 0);
+        
+        ctx.save();
+        ctx.translate(pos.x, pos.y + config.tileSize - 25 - yOffset);
+
+        if (this.flyHeight > 0) {
+            ctx.save(); ctx.translate(0, yOffset + 10); ctx.scale(1, 0.5);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        }
+
+        if (this.type === 'rover') this.drawRover();
+        else if (this.type === 'ufo') this.drawUFO();
+        else if (this.type === 'bot') this.drawBot();
+        
+        if (dayCycle > 0.4 && dayCycle < 0.8) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(200, 255, 255, 0.3)';
+            ctx.beginPath(); ctx.moveTo(0, -10);
+            const beamDir = this.facingRight ? 1 : -1;
+            ctx.lineTo(beamDir * 80, 40); ctx.lineTo(beamDir * 80, -40);
+            ctx.fill(); ctx.restore();
+        }
+
+        ctx.restore();
+
+        if ((this.state === ActorState.MINING || this.state === ActorState.SCANNING) && this.type !== 'rover') {
+            const targetPos = isoToScreen(this.targetGridPos.x, this.targetGridPos.y, this.targetBlock ? this.targetBlock.z : 0);
+            const sourceY = pos.y + config.tileSize - 25 - yOffset;
+            ctx.beginPath(); ctx.moveTo(pos.x, sourceY);
+            ctx.lineTo(targetPos.x, targetPos.y + 15); 
+            ctx.lineWidth = this.state === ActorState.MINING ? (Math.random() * 3 + 1) : 1;
+            ctx.strokeStyle = this.type === 'ufo' ? '#00f3ff' : '#ff5e3a';
+            ctx.shadowBlur = 10; ctx.shadowColor = ctx.strokeStyle; ctx.stroke(); ctx.shadowBlur = 0;
+        }
+    }
+
+    drawRover() {
+        ctx.fillStyle = '#111'; [-10, 10].forEach(x => { ctx.beginPath(); ctx.arc(x, 0, 4, 0, Math.PI*2); ctx.fill(); });
+        ctx.fillStyle = '#e1e1e6'; ctx.beginPath(); ctx.roundRect(-15, -15, 30, 15, 4); ctx.fill();
+        ctx.fillStyle = '#87ceeb'; ctx.beginPath(); ctx.arc(0, -15, 8, Math.PI, 0); ctx.fill();
+        if (this.state === ActorState.MINING) {
+            ctx.save(); ctx.translate(10, -8); ctx.rotate(Math.sin(globalTick * 0.4));
+            ctx.fillStyle = '#555'; ctx.fillRect(0, -2, 10, 3);
+            ctx.translate(10, 0); ctx.rotate(Math.PI/2);
+            ctx.fillStyle = '#444'; ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(4, 0); ctx.lineTo(0, 2); ctx.lineTo(-4, 0); ctx.fill(); ctx.restore();
+        }
+    }
+
+    drawUFO() {
+        ctx.save(); ctx.scale(1, 0.4); ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#00f3ff'; const rot = globalTick * 0.2;
+        for(let i=0; i<3; i++) { const a = rot + (i * (Math.PI*2)/3); ctx.beginPath(); ctx.arc(Math.cos(a)*15, Math.sin(a)*15, 3, 0, Math.PI*2); ctx.fill(); }
+        ctx.restore();
+        ctx.fillStyle = 'rgba(200, 240, 255, 0.8)'; ctx.beginPath(); ctx.arc(0, -5, 10, Math.PI, 0); ctx.fill(); ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    drawBot() {
+        const bob = Math.sin(globalTick * 0.5) * 3; ctx.translate(0, bob);
+        ctx.fillStyle = '#bd00ff'; ctx.fillRect(-6, -12, 12, 12);
+        ctx.fillStyle = '#0f0'; ctx.fillRect(-2, -8, 4, 4);
+        ctx.strokeStyle = '#888'; ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(-10, -18); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(6, -12); ctx.lineTo(10, -18); ctx.stroke();
+    }
+}
+
+let actors = [];
+let rocket = { active: false, y: -500, deployed: false };
+
+function createFloater(gx, gy, text, color='#fff') {
+    const rx = Math.round(gx); const ry = Math.round(gy);
+    const block = gridMap.get(`${rx},${ry}`);
+    const pos = isoToScreen(gx, gy, block ? block.z : 0);
+    floaters.push({ x: pos.x, y: pos.y - 30, text: text, life: 1.0, color: color });
+}
+
+function checkReinforcements() {
+    if (totalYield > 100 && !rocket.active && !rocket.deployed) {
+        rocket.active = true;
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+        uiStatus.innerText = "ROCKET_INBOUND"; uiStatus.style.color = "red";
+    }
+}
+
+// --- SETUP ---
+function getTerrainHeight(x, y) {
+    let height = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2;
+    height += Math.sin(x * 0.3 + y * 0.2) * 0.5;
+    for (let i = 0; i < craters.length; i++) {
+        const c = craters[i]; const d = Math.sqrt((x - c.x)**2 + (y - c.y)**2);
+        if (d < c.r) height -= Math.cos(d / c.r * Math.PI / 2) * c.d;
+    }
+    return Math.max(0, height + 1); 
+}
+
+function isoToScreen(gx, gy, z) {
+    const x = (gx - gy) * config.tileSize;
+    const y = (gx + gy) * (config.tileSize * 0.5) - (z * config.zScale);
+    return { x: originX + x + camShakeX, y: originY + y + camShakeY };
+}
+
+function resize() {
+    width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight;
+    originX = width / 2; originY = height / 2 + 100;
+    stars = []; for(let i=0; i<80; i++) stars.push({ x: Math.random()*width, y: Math.random()*height*0.6, s: Math.random()*1.5, a: Math.random() });
+}
+
+function initGrid() {
+    grid = []; gridMap.clear(); craters = [];
+    for(let i=0; i<5; i++) craters.push({ x: (Math.random()-0.5)*40, y: (Math.random()-0.5)*40, r: Math.random()*5+3, d: Math.random()*3+1 });
+    
+    const S = config.gridSize;
+    for (let y = -S; y <= S; y++) {
+        for (let x = -S; x <= S; x++) {
+            const z = getTerrainHeight(x, y);
+            let type = Math.random() < 0.01 ? 'celestial' : (Math.random() < 0.1 ? 'vitalis' : 'genesis');
+            const block = { x, y, z, type, health: 100, mined: false, reserved: false, structure: null, depth: (x+y)*config.tileSize - z*config.zScale };
+            grid.push(block); gridMap.set(`${x},${y}`, block);
+        }
+    }
+    sortedGrid = [...grid].sort((a,b) => a.depth - b.depth);
+    
+    actors = [];
+    for(let i=0; i<6; i++) actors.push(new Miner('rover', (Math.random()-0.5)*10, (Math.random()-0.5)*10));
+    for(let i=0; i<6; i++) actors.push(new Miner('ufo', (Math.random()-0.5)*12, (Math.random()-0.5)*12));
+    uiUnits.innerText = actors.length;
+}
+
+// --- RENDERING ---
+function updateEnvironment() {
+    const now = Date.now();
+    // 12 Minute Cycle
+    dayCycle = (now % DAY_DURATION) / DAY_DURATION;
+    
+    // Clock
+    const totalCycles = Math.floor(now / DAY_DURATION);
+    const tickValue = Math.floor(dayCycle * 1000).toString().padStart(3, '0');
+    marsClock.innerText = `SOL_${totalCycles} :: ${tickValue}`;
+    
+    if (globalTick % 60 === 0 && !isStorming) {
+        const currentDayIndex = Math.floor(now / DAY_DURATION);
+        if (currentDayIndex > lastStormDayIndex) {
+            const isNight = dayCycle > 0.4 && dayCycle < 0.8;
+            const chance = isNight ? 0.10 : 0.25; 
+            
+            if (Math.random() < chance) {
+                isStorming = true;
+                lastStormDayIndex = currentDayIndex; 
+                weatherBox.style.display = 'block';
+                uiEnv.innerText = "DUST_STORM"; uiEnv.style.color = "orange";
+                setTimeout(() => { 
+                    isStorming = false; 
+                    weatherBox.style.display = 'none'; 
+                    uiEnv.innerText = "STABLE"; uiEnv.style.color = "#0f0"; 
+                }, 15000);
+            }
+        }
+    }
+    
+    if (isStorming) {
+        camShakeX = (Math.random() - 0.5) * 4;
+        camShakeY = (Math.random() - 0.5) * 4;
+    } else {
+        camShakeX = 0; camShakeY = 0;
+    }
+}
+
+function drawBackground() {
+    let top, bot;
+    if (dayCycle < 0.2 || dayCycle > 0.8) { 
+        top = config.colors.skyDayTop; bot = config.colors.skyDayBot;
+    } else if (dayCycle > 0.4 && dayCycle < 0.6) { 
+        top = config.colors.skyNightTop; bot = config.colors.skyNightBot;
+    } else { 
+        top = lerpColor(config.colors.skyDayTop, config.colors.skyNightTop, 0.5);
+        bot = lerpColor(config.colors.skyDayBot, config.colors.skyNightBot, 0.5);
+    }
+
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, top); grad.addColorStop(1, bot);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, width, height);
+    
+    const starOpacity = dayCycle > 0.3 && dayCycle < 0.7 ? 1 : 0;
+    if (starOpacity > 0) {
+        ctx.fillStyle = '#fff';
+        for(let s of stars) {
+            ctx.globalAlpha = s.a * starOpacity;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.s, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawStructure(block, pos) {
+    if (!block.structure) return;
+    const ts = config.tileSize;
+    const y = pos.y + ts - 5; 
+    
+    ctx.save();
+    ctx.translate(pos.x, y);
+    ctx.scale(1.8, 1.8);
+    
+    if (block.structure === 'solar') {
+        ctx.fillStyle = '#444'; ctx.fillRect(-4, -10, 8, 10);
+        ctx.translate(0, -12); ctx.rotate(-0.5);
+        ctx.fillStyle = '#0055aa'; ctx.strokeStyle = '#00aaff';
+        ctx.beginPath(); ctx.rect(-15, -10, 30, 20); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.moveTo(-15,-10); ctx.lineTo(-5, 10); ctx.lineTo(-10, 10); ctx.lineTo(-20, -10); ctx.fill();
+    } else if (block.structure === 'comms') {
+        ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-35); ctx.stroke();
+        ctx.fillStyle = '#d00'; ctx.beginPath(); ctx.arc(0,-35, 3, 0, Math.PI*2); ctx.fill(); 
+        if (Math.floor(globalTick/10)%2===0) { ctx.globalAlpha=0.5; ctx.fillStyle='red'; ctx.fill(); ctx.globalAlpha=1; }
+        ctx.beginPath(); ctx.arc(0, -25, 8, 0, Math.PI, true); ctx.strokeStyle='#ccc'; ctx.stroke();
+    } else if (block.structure === 'silo') {
+        ctx.fillStyle = '#555'; ctx.beginPath(); ctx.ellipse(0, -15, 12, 18, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#333'; ctx.beginPath(); ctx.ellipse(0, -15, 12, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#0f0'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-6, -10); ctx.lineTo(-6, -25); ctx.stroke();
+    } else if (block.structure === 'charging') {
+        ctx.fillStyle = '#0f0'; 
+        ctx.shadowBlur = 10; ctx.shadowColor = '#0f0';
+        ctx.fillRect(-8, -25, 16, 25);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#000'; ctx.fillRect(-4, -20, 8, 5); ctx.fillRect(-4, -10, 8, 5);
+        ctx.fillStyle = '#222'; ctx.beginPath(); ctx.ellipse(0, 0, 20, 8, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawVoxel3D(block) {
+    const pos = isoToScreen(block.x, block.y, block.z);
+    
+    if (block.mined) {
+        drawMinedBase(block);
+        drawStructure(block, pos);
+        return;
+    }
+
+    const ts = config.tileSize; const hts = ts * 0.5; const voxelHeight = 25;
+    let isNight = dayCycle > 0.3 && dayCycle < 0.7;
+    let topColor, sideColor, glowColor = null;
+    let pulse = 0;
+
+    if (block.type === 'celestial') {
+        topColor = config.colors.celestialTop; sideColor = config.colors.celestialSide; 
+        if (isNight) glowColor = '#d8b4fe'; 
+        pulse = Math.sin(globalTick * 0.2) * 4; 
+    } else if (block.type === 'vitalis') {
+        topColor = config.colors.vitalisTop; sideColor = config.colors.vitalisSide;
+        if (isNight) glowColor = '#ffd700';
+        pulse = Math.sin(globalTick * 0.05) * 2;
+    } else {
+        topColor = config.colors.genesisTop; sideColor = config.colors.genesisSide;
+        if (isNight) { topColor = '#804030'; sideColor = '#602010'; }
+    }
+
+    const startY = pos.y - pulse;
+    
+    ctx.fillStyle = sideColor;
+    ctx.beginPath(); ctx.moveTo(pos.x, startY + ts); ctx.lineTo(pos.x + ts, startY + hts); ctx.lineTo(pos.x + ts, startY + hts + voxelHeight); ctx.lineTo(pos.x, startY + ts + voxelHeight); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pos.x, startY + ts); ctx.lineTo(pos.x - ts, startY + hts); ctx.lineTo(pos.x - ts, startY + hts + voxelHeight); ctx.lineTo(pos.x, startY + ts + voxelHeight); ctx.fill();
+    
+    const grad = ctx.createLinearGradient(pos.x - ts, startY, pos.x + ts, startY);
+    grad.addColorStop(0, isNight ? '#555' : '#ffffff99'); grad.addColorStop(0.2, topColor); grad.addColorStop(1, sideColor);
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.moveTo(pos.x, startY); ctx.lineTo(pos.x + ts, startY + hts); ctx.lineTo(pos.x, startY + ts); ctx.lineTo(pos.x - ts, startY + hts); ctx.fill();
+    
+    if (glowColor) { 
+        ctx.shadowBlur = 15; ctx.shadowColor = glowColor;
+        ctx.fillStyle = glowColor; ctx.fill(); 
+        ctx.shadowBlur = 0;
+    }
+    
+    if (block.reserved) { ctx.strokeStyle = '#bd00ff'; ctx.globalAlpha = 0.3; ctx.stroke(); ctx.globalAlpha = 1.0; }
+}
+
+function drawMinedBase(block) {
+    const pos = isoToScreen(block.x, block.y, block.z - 0.5);
+    const ts = config.tileSize; const hts = ts * 0.5;
+    ctx.fillStyle = config.colors.minedBase;
+    ctx.beginPath(); ctx.moveTo(pos.x, pos.y + ts + 15); ctx.lineTo(pos.x + ts, pos.y + hts + 15); ctx.lineTo(pos.x, pos.y + 15); ctx.lineTo(pos.x - ts, pos.y + hts + 15); ctx.fill();
+    ctx.strokeStyle = '#1a0a0a'; ctx.stroke();
+}
+
+function createDebris(gx, gy, color) {
+    const rx = Math.round(gx); const ry = Math.round(gy);
+    const block = gridMap.get(`${rx},${ry}`);
+    const z = block ? block.z : 0;
+    const pos = isoToScreen(gx, gy, z + 0.5);
+    for (let i = 0; i < 2; i++) { 
+        particles.push({ x: pos.x, y: pos.y, vx: (Math.random()-0.5)*5, vy: (Math.random()-1)*5, life: 1.0, color: color, size: Math.random()*3+1 });
+    }
+}
+
+function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.04;
+        if (p.life <= 0) particles.splice(i, 1);
+        else { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); }
+    }
+    ctx.globalAlpha = 1.0;
+}
+
+function updateFloaters() {
+    ctx.font = "bold 14px 'Rajdhani'";
+    ctx.textAlign = "center";
+    for(let i=floaters.length-1; i>=0; i--) {
+        const f = floaters[i];
+        f.y -= 0.5; f.life -= 0.02;
+        if(f.life <= 0) floaters.splice(i, 1);
+        else {
+            ctx.globalAlpha = f.life;
+            ctx.fillStyle = f.color;
+            ctx.fillText(f.text, f.x, f.y);
+        }
+    }
+    ctx.globalAlpha = 1.0;
+}
+
+function drawRocket() {
+    if(!rocket.active) return;
+    const targetY = originY - 100;
+    if (rocket.y < targetY) rocket.y += 3;
+    else if (!rocket.deployed) {
+        rocket.deployed = true;
+        for(let i=0; i<10; i++) actors.push(new Miner('bot', (Math.random()-0.5)*5, (Math.random()-0.5)*5));
+        uiUnits.innerText = actors.length; uiStatus.innerText = "SWARM_DEPLOYED"; uiStatus.style.color = "#bd00ff";
+    }
+    const rx = originX + camShakeX; const ry = rocket.y + camShakeY;
+    ctx.save(); ctx.translate(rx, ry);
+    if (!rocket.deployed) { ctx.fillStyle = `rgba(255, 100, 0, ${Math.random()})`; ctx.beginPath(); ctx.moveTo(-10, 40); ctx.lineTo(10, 40); ctx.lineTo(0, 80 + Math.random()*20); ctx.fill(); }
+    ctx.fillStyle = '#eee'; ctx.beginPath(); ctx.ellipse(0, 0, 20, 50, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#d00'; ctx.beginPath(); ctx.moveTo(-15, 30); ctx.lineTo(-30, 50); ctx.lineTo(-15, 40); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(15, 30); ctx.lineTo(30, 50); ctx.lineTo(15, 40); ctx.fill();
+    ctx.restore();
+}
+
+function drawStorm() {
+    if (!isStorming) return;
+    ctx.fillStyle = 'rgba(200, 150, 100, 0.2)';
+    ctx.fillRect(0,0,width,height);
+    ctx.strokeStyle = 'rgba(255, 200, 150, 0.4)';
+    ctx.lineWidth = 2;
+    for(let i=0; i<20; i++) {
+        const x = Math.random() * width; const y = Math.random() * height;
+        const len = Math.random() * 100 + 50;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + len, y + len/2); ctx.stroke();
+    }
+}
+
+function updateTimer() {
+    const diff = Date.now() - startTime;
+    const hrs = Math.floor(diff / 3600000).toString().padStart(2, '0');
+    const mins = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+    uiTimer.innerText = `${hrs}:${mins}:${secs}`;
+}
+
+function loop() {
+    globalTick++;
+    if (globalTick % 20 === 0) updateTimer();
+    updateEnvironment();
+    
+    drawBackground();
+    
+    // Draw grid
+    for (let i = 0; i < sortedGrid.length; i++) {
+        const block = sortedGrid[i];
+        if (block.mined) {
+            drawMinedBase(block);
+            const pos = isoToScreen(block.x, block.y, block.z);
+            drawStructure(block, pos);
+        } else {
+            drawVoxel3D(block);
+        }
+    }
+    
+    drawRocket();
+    actors.forEach(actor => { actor.update(); actor.draw(); });
+    updateParticles();
+    updateFloaters();
+    drawStorm();
+    
+    requestAnimationFrame(loop);
+}
+
+resize();
+initGrid();
+window.addEventListener('resize', resize);
+loop();
+</script>
+</body>
+</html>
