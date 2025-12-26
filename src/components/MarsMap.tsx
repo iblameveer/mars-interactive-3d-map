@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRef, useState, useMemo, Suspense, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF } from "@react-three/drei";
+import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 
