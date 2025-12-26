@@ -1,3 +1,16 @@
+// Mock localStorage to prevent server crashes in environments without DOM
+if (typeof (globalThis as any).localStorage === "undefined" || (globalThis as any).localStorage === null) {
+  const noop = () => {};
+  (globalThis as any).localStorage = {
+    getItem: () => null,
+    setItem: noop,
+    removeItem: noop,
+    clear: noop,
+    length: 0,
+    key: () => null,
+  } as any;
+}
+
 import type { NextConfig } from "next";
 import path from "node:path";
 

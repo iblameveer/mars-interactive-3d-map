@@ -146,6 +146,42 @@ type Box = null | { top: number; left: number; width: number; height: number };
 
 const BOX_PADDING = 4; // Pixels to expand the box on each side
 
+// Safe localStorage wrapper to avoid server/runtime errors where localStorage
+// may exist but not be a proper storage object. Always prefer these helpers
+// instead of calling `localStorage` directly in shared code.
+const safeLocalStorage = {
+  getItem: (k: string) => {
+    try {
+      if (typeof window === "undefined") return null;
+      const ls: any = (globalThis as any).localStorage;
+      if (!ls || typeof ls.getItem !== "function") return null;
+      return ls.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (k: string, v: string) => {
+    try {
+      if (typeof window === "undefined") return;
+      const ls: any = (globalThis as any).localStorage;
+      if (!ls || typeof ls.setItem !== "function") return;
+      ls.setItem(k, v);
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: (k: string) => {
+    try {
+      if (typeof window === "undefined") return;
+      const ls: any = (globalThis as any).localStorage;
+      if (!ls || typeof ls.removeItem !== "function") return;
+      ls.removeItem(k);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 // Helper to check if element can be made contentEditable
 const isTextEditable = (element: HTMLElement): boolean => {
   const tagName = element.tagName.toLowerCase();
@@ -202,7 +238,7 @@ const isTextEditable = (element: HTMLElement): boolean => {
 // Helper to extract only text nodes from an element (excluding child element text)
 const extractDirectTextContent = (element: HTMLElement): string => {
   let text = "";
-  for (const node of element.childNodes) {
+  for (const node of Array.from(element.childNodes)) {
     if (node.nodeType === Node.TEXT_NODE) {
       text += node.textContent || "";
     }
@@ -403,14 +439,16 @@ export default function HoverReceiver() {
   const [hoverBoxes, setHoverBoxes] = useState<Box[]>([]);
   const [focusBox, setFocusBox] = useState<Box>(null);
   const [focusedElementId, setFocusedElementId] = useState<string | null>(null);
-  const [isVisualEditMode, setIsVisualEditMode] = useState(() => {
-    // Initialize from localStorage if available
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(VISUAL_EDIT_MODE_KEY);
-      return stored === "true";
-    }
-    return false;
-  });
+
+  // --- FIX START: Safe initialization of state ---
+  const [isVisualEditMode, setIsVisualEditMode] = useState(false);
+
+  useEffect(() => {
+    const stored = safeLocalStorage.getItem(VISUAL_EDIT_MODE_KEY);
+    if (stored === "true") setIsVisualEditMode(true);
+  }, []);
+  // --- FIX END ---
+
   const [isResizing, setIsResizing] = useState(false);
   const [resizeHandle, setResizeHandle] = useState<string | null>(null);
   const [resizeStart, setResizeStart] = useState<{
@@ -455,9 +493,7 @@ export default function HoverReceiver() {
   useEffect(() => {
     isVisualEditModeRef.current = isVisualEditMode;
     // Persist to localStorage
-    if (typeof window !== "undefined") {
-      localStorage.setItem(VISUAL_EDIT_MODE_KEY, String(isVisualEditMode));
-    }
+    safeLocalStorage.setItem(VISUAL_EDIT_MODE_KEY, String(isVisualEditMode));
   }, [isVisualEditMode]);
 
   // On mount, notify parent if visual edit mode was restored from localStorage
@@ -480,7 +516,7 @@ export default function HoverReceiver() {
       setTimeout(() => {
         if (typeof window !== "undefined") {
           // Restore focused element
-          const focusedData = localStorage.getItem(FOCUSED_ELEMENT_KEY);
+          const focusedData = safeLocalStorage.getItem(FOCUSED_ELEMENT_KEY);
           if (focusedData) {
             try {
               const { id } = JSON.parse(focusedData);
@@ -1534,12 +1570,12 @@ export default function HoverReceiver() {
         setFocusTag(tagName);
 
         // Save focused element info to localStorage
-        if (hitId && typeof window !== "undefined") {
+          if (hitId) {
           const focusedElementData = {
             id: hitId,
             tag: tagName,
           };
-          localStorage.setItem(
+          safeLocalStorage.setItem(
             FOCUSED_ELEMENT_KEY,
             JSON.stringify(focusedElementData)
           );
@@ -1755,9 +1791,7 @@ export default function HoverReceiver() {
           setHoverTag(null);
 
           // Clear focused element from localStorage
-          if (typeof window !== "undefined") {
-            localStorage.removeItem(FOCUSED_ELEMENT_KEY);
-          }
+          safeLocalStorage.removeItem(FOCUSED_ELEMENT_KEY);
 
           // Notify parent that focus was cleared
           const msg: ChildToParent = {
@@ -1828,9 +1862,9 @@ export default function HoverReceiver() {
         setIsVisualEditMode(newMode);
 
         // Clear localStorage if visual edit mode is being turned off
-        if (!newMode && typeof window !== "undefined") {
-          localStorage.removeItem(VISUAL_EDIT_MODE_KEY);
-          localStorage.removeItem(FOCUSED_ELEMENT_KEY);
+        if (!newMode) {
+          safeLocalStorage.removeItem(VISUAL_EDIT_MODE_KEY);
+          safeLocalStorage.removeItem(FOCUSED_ELEMENT_KEY);
         }
 
         // Send acknowledgement back to parent so it knows we received the mode change
