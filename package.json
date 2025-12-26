@@ -3,9 +3,9 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "node -r ./scripts/polyfill-localstorage.js node_modules/next/dist/bin/next dev --turbopack",
-        "build": "node -r ./scripts/polyfill-localstorage.js node_modules/next/dist/bin/next build",
-        "start": "next start",
+        "dev": "NODE_OPTIONS='-r ./scripts/polyfill-localstorage.js' next dev --turbopack",
+        "build": "NODE_OPTIONS='-r ./scripts/polyfill-localstorage.js' next build",
+        "start": "NODE_OPTIONS='-r ./scripts/polyfill-localstorage.js' next start",
         "lint": "next lint"
     },
     "dependencies": {
