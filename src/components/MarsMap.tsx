@@ -547,10 +547,10 @@ export function MarsMap() {
                 </svg>
               </button>
             </div>
-            <iframe
-            src="/online_viewer_net5.htm"
-            className="flex-1 w-full h-screen border-none"
-            title="Online Viewer" />
+              <iframe
+              src="/online_viewer_net8.htm"
+              className="flex-1 w-full h-screen border-none"
+              title="Online Viewer" />
 
           </motion.div>
         }
