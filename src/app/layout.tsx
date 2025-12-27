@@ -1,3 +1,21 @@
+// -----------------------------------------------------------------------------
+// 🛡️ BUN LOCAL FIX: Mock localStorage to prevent server crashes
+// Bun defines 'window' on the server, which tricks libraries into crashing.
+// This ensures localStorage exists (even if empty) so the app doesn't break.
+// -----------------------------------------------------------------------------
+if (typeof window === "undefined") {
+  const mockStorage: Storage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {},
+    length: 0,
+    key: () => null,
+  };
+  (global as any).localStorage = mockStorage;
+  (global as any).sessionStorage = mockStorage;
+}
+
 import type { Metadata } from "next";
 import React from "react";
 import "./globals.css";
