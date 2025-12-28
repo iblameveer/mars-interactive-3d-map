@@ -528,8 +528,94 @@ function TargetDropdown({ selectedPoi, setSelectedPoi }: { selectedPoi: typeof P
   );
 }
 
+function BaseOperationsDropdown({ selectedBase, setSelectedBase }: { selectedBase: typeof BASES[0], setSelectedBase: (base: typeof BASES[0]) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-3 pointer-events-auto">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-cyan-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        {/* Decorative corner elements */}
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
+
+        <div className="flex flex-col items-start gap-1 relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+            <div className="text-[10px] text-cyan-500 font-bold tracking-[0.3em] font-mono uppercase">Strategic_Command</div>
+          </div>
+          <div className="text-[12px] text-white uppercase tracking-[0.2em] font-bold pl-3.5">
+            {selectedBase.name}
+          </div>
+        </div>
+        <div className="ml-auto w-8 h-8 flex items-center justify-center relative z-10 border-l border-white/5 pl-4">
+          <motion.div 
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            className="text-white/40"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </motion.div>
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
+          >
+            {/* Background scanner animation */}
+            <motion.div 
+              animate={{ top: ["0%", "100%", "0%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              className="absolute left-0 right-0 h-10 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent pointer-events-none"
+            />
+
+            {BASES.map((base, idx) => (
+              <motion.button
+                key={base.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                onClick={() => {
+                  setSelectedBase(base);
+                  setIsOpen(false);
+                }}
+                className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
+                  selectedBase.id === base.id 
+                    ? "border-cyan-500 bg-cyan-500/5 text-cyan-500" 
+                    : base.special 
+                      ? "border-purple-500/30 text-purple-400/80 hover:text-purple-300 bg-purple-500/5"
+                      : "border-transparent text-white/40 hover:text-white/80"
+                }`}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className={`relative text-[11px] font-bold uppercase tracking-[0.2em] ${base.special ? "italic" : ""}`}>{base.name}</span>
+                  <span className="relative text-[7px] opacity-40 font-mono tracking-widest uppercase">{base.code}</span>
+                </div>
+                <div className="flex flex-col items-end gap-0.5 opacity-30 group-hover:opacity-60 transition-opacity">
+                  <span className={`text-[7px] font-mono tracking-tighter px-1 border ${base.special ? "border-purple-500/50 text-purple-400" : "border-white/10"}`}>{base.status}</span>
+                </div>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
+  const [selectedBase, setSelectedBase] = useState(BASES[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
