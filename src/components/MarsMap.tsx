@@ -539,13 +539,24 @@ function TargetDropdown({
   );
 }
 
-function BaseOperationsDropdown({ selectedBase, setSelectedBase }: { selectedBase: typeof BASES[0], setSelectedBase: (base: typeof BASES[0]) => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function BaseOperationsDropdown({ 
+  selectedBase, 
+  setSelectedBase,
+  isOpen,
+  setIsOpen 
+}: { 
+  selectedBase: typeof BASES[0], 
+  setSelectedBase: (base: typeof BASES[0]) => void,
+  isOpen: boolean,
+  setIsOpen: (open: boolean) => void 
+}) {
   return (
     <div className="flex flex-col gap-3 pointer-events-auto">
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-cyan-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -557,7 +568,7 @@ function BaseOperationsDropdown({ selectedBase, setSelectedBase }: { selectedBas
         <div className="flex flex-col items-start gap-1 relative z-10">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-            <div className="text-[10px] text-cyan-500 font-bold tracking-[0.3em] font-mono uppercase">Strategic_Command</div>
+            <div className="text-[10px] text-cyan-500 font-bold tracking-[0.3em] font-mono uppercase">BASES_OF_OPERATIONS</div>
           </div>
           <div className="text-[12px] text-white uppercase tracking-[0.2em] font-bold pl-3.5">
             {selectedBase.name}
