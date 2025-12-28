@@ -444,13 +444,24 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
   );
 }
 
-function TargetDropdown({ selectedPoi, setSelectedPoi }: { selectedPoi: typeof POIS[0] | null, setSelectedPoi: (poi: typeof POIS[0] | null) => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function TargetDropdown({ 
+  selectedPoi, 
+  setSelectedPoi,
+  isOpen,
+  setIsOpen 
+}: { 
+  selectedPoi: typeof POIS[0] | null, 
+  setSelectedPoi: (poi: typeof POIS[0] | null) => void,
+  isOpen: boolean,
+  setIsOpen: (open: boolean) => void 
+}) {
   return (
     <div className="flex flex-col gap-3 pointer-events-auto">
       <button 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-orange-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
