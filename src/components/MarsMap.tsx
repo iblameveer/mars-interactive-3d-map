@@ -54,6 +54,13 @@ const POIS = [
   image: "https://images-assets.nasa.gov/image/PIA03612/PIA03612~medium.jpg"
 }];
 
+const BASES = [
+  { id: "genesis", name: "Genesis Protocol", status: "ONLINE", code: "GEN-01" },
+  { id: "vitalis", name: "Vitalis Region", status: "SECURE", code: "VIT-04" },
+  { id: "celestial", name: "Celestial Zones", status: "ACTIVE", code: "CEL-09" },
+  { id: "global", name: "Global Status", status: "STANDBY", code: "GLOB-X", special: true }
+];
+
 function latLngToVector3(lat: number, lng: number, radius: number) {
   const phi = (90 - lat) * (Math.PI / 180);
   const theta = (lng + 180) * (Math.PI / 180);
