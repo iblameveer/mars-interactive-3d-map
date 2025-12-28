@@ -493,12 +493,13 @@ function TargetDropdown({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
-          >
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
+            >
             {/* Background scanner animation */}
             <motion.div 
               animate={{ top: ["0%", "100%", "0%"] }}
@@ -588,12 +589,13 @@ function BaseOperationsDropdown({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-            className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
-          >
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
+            >
             {/* Background scanner animation */}
             <motion.div 
               animate={{ top: ["0%", "100%", "0%"] }}
