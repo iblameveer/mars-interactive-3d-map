@@ -638,6 +638,7 @@ function BaseOperationsDropdown({
 export function MarsMap() {
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const [selectedBase, setSelectedBase] = useState(BASES[0]);
+  const [activeDropdown, setActiveDropdown] = useState<"target" | "base" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
@@ -650,10 +651,20 @@ export function MarsMap() {
         setSelectedPoi(null);
         setIsViewingOnline(false);
         setIsLoading(false);
+        setActiveDropdown(null);
       }
     };
+    
+    const handleClickOutside = () => {
+      setActiveDropdown(null);
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("click", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("click", handleClickOutside);
+    };
   }, []);
 
   const handleZoomThreshold = () => {
@@ -686,6 +697,7 @@ export function MarsMap() {
           setSelectedPoi(null);
           setIsViewingOnline(false);
           setIsLoading(false);
+          setActiveDropdown(null);
         }} />
 
       }
@@ -797,8 +809,18 @@ export function MarsMap() {
 
       <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
         <div className="flex gap-4">
-          <TargetDropdown selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
-          <BaseOperationsDropdown selectedBase={selectedBase} setSelectedBase={setSelectedBase} />
+          <TargetDropdown 
+            selectedPoi={selectedPoi} 
+            setSelectedPoi={setSelectedPoi}
+            isOpen={activeDropdown === "target"}
+            setIsOpen={(open) => setActiveDropdown(open ? "target" : null)}
+          />
+          <BaseOperationsDropdown 
+            selectedBase={selectedBase} 
+            setSelectedBase={setSelectedBase}
+            isOpen={activeDropdown === "base"}
+            setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
+          />
         </div>
 
         <div className="flex flex-col items-end gap-4">
