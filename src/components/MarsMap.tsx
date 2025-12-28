@@ -774,7 +774,10 @@ export function MarsMap() {
       </div>
 
       <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
-        <TargetDropdown selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
+        <div className="flex gap-4">
+          <TargetDropdown selectedPoi={selectedPoi} setSelectedPoi={setSelectedPoi} />
+          <BaseOperationsDropdown selectedBase={selectedBase} setSelectedBase={setSelectedBase} />
+        </div>
 
         <div className="flex flex-col items-end gap-4">
           <AnimatePresence>
