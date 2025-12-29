@@ -644,6 +644,7 @@ export function MarsMap() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState("/online_viewer_net8.htm");
   const controlsRef = useRef<any>(null);
   const { progress } = useProgress();
 
@@ -755,41 +756,52 @@ export function MarsMap() {
         </Canvas>
 
       <AnimatePresence>
-        {isLoading &&
-        <LoadingScreen onComplete={() => {
-          setIsLoading(false);
-          setIsViewingOnline(true);
-        }} />
-        }
+        {(isLoading || isViewingOnline) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-[100] bg-black flex flex-col pointer-events-auto"
+          >
+            {/* Header overlay */}
+            {!isLoading && (
+              <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10 relative z-20">
+                <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3 !whitespace-pre-line">
+                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                  {iframeUrl === "/genesis_protocol.htm" ? "SAT-LINK: GENESIS_ESTATES_v4.2" : "Live Feed: mars blocks excavation"}
+                </div>
+                <button
+                  onClick={() => {
+                    setIsViewingOnline(false);
+                    setIsLoading(false);
+                  }}
+                  className="text-white/60 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
 
-        {isViewingOnline &&
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 z-[100] bg-black flex flex-col pointer-events-auto">
+            {/* Iframe rendered behind loading screen if loading */}
+            <iframe
+              src={iframeUrl}
+              className={`flex-1 w-full h-screen border-none transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}`}
+              title="Mars Feed"
+            />
 
-            <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10">
-              <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3 !whitespace-pre-line">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Live Feed: mars blocks excavation
-
-            </div>
-              <button
-              onClick={() => setIsViewingOnline(false)}
-              className="text-white/60 hover:text-white transition-colors">
-
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-              <iframe
-              src="/online_viewer_net8.htm"
-              className="flex-1 w-full h-screen border-none"
-              title="Online Viewer" />
-
+            {isLoading && (
+              <LoadingScreen 
+                title={iframeUrl === "/genesis_protocol.htm" ? "Synchronizing Genesis Protocol" : "Establishing Mars Uplink"}
+                onComplete={() => {
+                  setIsLoading(false);
+                  setIsViewingOnline(true);
+                }} 
+              />
+            )}
           </motion.div>
-        }
+        )}
       </AnimatePresence>
 
       <div className="absolute top-10 left-10 z-10 pointer-events-none">
@@ -823,6 +835,7 @@ export function MarsMap() {
             isOpen={activeDropdown === "base"}
             setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
           />
+
         </div>
 
         <div className="flex flex-col items-end gap-4">
