@@ -6,6 +6,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { LoadingScreen as SatelliteLoadingScreen } from "./LoadingScreen";
 
 const POIS = [
 {
@@ -173,7 +175,7 @@ function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPo
         <primitive 
           ref={marsRef} 
           object={scene} 
-          scale={0.4} // Explicitly set to 0.4 as requested
+          scale={0.4}
           rotation={[0, 0, 0]}
         >
         {POIS.map((poi) => (
@@ -214,7 +216,6 @@ function ScannerHUD() {
           className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
 
     </div>);
-
 }
 
 function TelemetryFeed() {
@@ -264,14 +265,49 @@ function TelemetryFeed() {
         )}
       </AnimatePresence>
     </div>);
-
 }
 
-function LoadingScreen({ onComplete, progress: externalProgress, title = "Establishing Uplink" }: { onComplete: () => void; progress?: number; title?: string }) {
+function LoadingScreen({ onComplete, progress: externalProgress, title = "Establishing Uplink", theme = "cyan" }: { onComplete: () => void; progress?: number; title?: string; theme?: "cyan" | "green" | "amber" }) {
   const [internalProgress, setInternalProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
   
   const displayProgress = externalProgress !== undefined ? externalProgress : internalProgress;
+
+  const colors = {
+    cyan: {
+      text: "text-cyan-500",
+      bg: "bg-cyan-500",
+      border: "border-cyan-500/20",
+      gradient: "from-cyan-600 to-cyan-400",
+      shadow: "shadow-[0_0_15px_rgba(34,211,238,0.5)]",
+      logHeader: "text-cyan-500/50",
+      logTimestamp: "text-cyan-500/40",
+      glitchBorder: "border-cyan-500/10",
+      footer: "text-cyan-500/20"
+    },
+    green: {
+      text: "text-green-500",
+      bg: "bg-green-500",
+      border: "border-green-500/20",
+      gradient: "from-green-600 to-green-400",
+      shadow: "shadow-[0_0_15px_rgba(34,197,94,0.5)]",
+      logHeader: "text-green-500/50",
+      logTimestamp: "text-green-500/40",
+      glitchBorder: "border-green-500/10",
+      footer: "text-green-500/20"
+    },
+    amber: {
+      text: "text-amber-500",
+      bg: "bg-amber-500",
+      border: "border-amber-500/20",
+      gradient: "from-amber-600 to-amber-400",
+      shadow: "shadow-[0_0_15px_rgba(245,158,11,0.5)]",
+      logHeader: "text-amber-500/50",
+      logTimestamp: "text-amber-500/40",
+      glitchBorder: "border-amber-500/10",
+      footer: "text-amber-500/20"
+    }
+  }[theme];
 
   useEffect(() => {
     if (externalProgress === undefined) {
@@ -324,8 +360,8 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
       
       {/* Matrix-like background effect */}
       <div className="absolute inset-0 pointer-events-none opacity-5">
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,255,255,0.1)_50%)] bg-[length:100%_4px] animate-pulse" />
-        <div className="h-full w-full flex flex-wrap gap-4 p-4 text-[8px] text-cyan-500 overflow-hidden leading-none break-all">
+        <div className={`absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,255,255,0.1)_50%)] bg-[length:100%_4px] animate-pulse`} />
+        <div className={`h-full w-full flex flex-wrap gap-4 p-4 text-[8px] ${colors.text} overflow-hidden leading-none break-all`}>
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className="opacity-20">
               {Math.random().toString(36).substring(2, 15)}
@@ -337,22 +373,22 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
       </div>
 
       <div className="w-[450px] flex flex-col gap-8 relative z-10">
-        <div className="flex justify-between items-end border-b border-cyan-500/20 pb-4">
+        <div className={`flex justify-between items-end border-b ${colors.border} pb-4`}>
           <div className="flex flex-col gap-1">
             <motion.div 
               animate={{ opacity: [1, 0.4, 1] }}
               transition={{ duration: 0.1, repeat: Infinity }}
-              className="text-[10px] text-cyan-500 uppercase tracking-[0.4em] font-bold"
+              className={`text-[10px] ${colors.text} uppercase tracking-[0.4em] font-bold`}
             >
               {title}
             </motion.div>
             <div className="text-white/60 text-[9px] tracking-widest flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-cyan-500 animate-ping rounded-full" />
+              <span className={`w-1.5 h-1.5 ${colors.bg} animate-ping rounded-full`} />
               SYSTEM://MARS_EXPLORER_v2.5.0
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <div className="text-cyan-500 text-2xl font-bold tabular-nums">
+            <div className={`text-2xl font-bold tabular-nums ${colors.text}`}>
               {Math.floor(displayProgress)}<span className="text-xs ml-1">%</span>
             </div>
           </div>
@@ -360,7 +396,7 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
         
         <div className="h-1.5 w-full bg-white/5 relative overflow-hidden border border-white/10">
           <motion.div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-600 to-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${colors.gradient} ${colors.shadow}`}
             animate={{ width: `${displayProgress}%` }}
             transition={{ duration: 0.3 }}
           />
@@ -372,7 +408,7 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
 
         <div className="grid grid-cols-2 gap-6">
           <div className="flex flex-col gap-1.5 bg-black/40 border border-white/5 p-4 rounded-sm min-h-[160px]">
-            <div className="text-[8px] text-cyan-500/50 uppercase tracking-[0.2em] mb-2 border-b border-white/5 pb-1">Uplink Log</div>
+            <div className={`text-[8px] ${colors.logHeader} uppercase tracking-[0.2em] mb-2 border-b border-white/5 pb-1`}>Uplink Log</div>
             <AnimatePresence mode="popLayout">
               {logs.map((log, i) => (
                 <motion.div
@@ -381,7 +417,7 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
                   animate={{ opacity: 1 - i * 0.12, x: 0 }}
                   className="text-[8px] text-white/40 tracking-widest flex items-center gap-2 whitespace-nowrap overflow-hidden"
                 >
-                  <span className="text-cyan-500/40">[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                  <span className={`${colors.logTimestamp}`}>[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
                   {log}
                 </motion.div>
               ))}
@@ -392,30 +428,30 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
             <div className="flex flex-col gap-2">
               <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
                 <span>Core Sync</span>
-                <span className={displayProgress > 30 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 30 ? "COMPLETE" : "SYNCING"}</span>
+                <span className={displayProgress > 30 ? colors.text : "animate-pulse"}>{displayProgress > 30 ? "COMPLETE" : "SYNCING"}</span>
               </div>
               <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 30 ? "100%" : "30%" }} />
+                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 30 ? "100%" : "30%" }} />
               </div>
             </div>
             
             <div className="flex flex-col gap-2">
               <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
                 <span>Voxel Grid</span>
-                <span className={displayProgress > 60 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 60 ? "READY" : "LOADING"}</span>
+                <span className={displayProgress > 60 ? colors.text : "animate-pulse"}>{displayProgress > 60 ? "READY" : "LOADING"}</span>
               </div>
               <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 60 ? "100%" : "60%" }} />
+                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 60 ? "100%" : "60%" }} />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
               <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
                 <span>Auth Token</span>
-                <span className={displayProgress > 90 ? "text-cyan-500" : "animate-pulse"}>{displayProgress > 90 ? "VERIFIED" : "PENDING"}</span>
+                <span className={displayProgress > 90 ? colors.text : "animate-pulse"}>{displayProgress > 90 ? "VERIFIED" : "PENDING"}</span>
               </div>
               <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className="h-full bg-cyan-500/30" animate={{ width: displayProgress > 90 ? "100%" : "90%" }} />
+                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 90 ? "100%" : "90%" }} />
               </div>
             </div>
           </div>
@@ -428,11 +464,11 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
             x: [-1, 1, -1, 2, -1]
           }}
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-          className="absolute inset-0 border-2 border-cyan-500/10 -m-8 pointer-events-none"
+          className={`absolute inset-0 border-2 ${colors.glitchBorder} -m-8 pointer-events-none`}
         />
       </div>
 
-      <div className="absolute bottom-12 text-cyan-500/20 text-[9px] tracking-[0.6em] uppercase flex flex-col items-center gap-2">
+      <div className={`absolute bottom-12 ${colors.footer} text-[9px] tracking-[0.6em] uppercase flex flex-col items-center gap-2`}>
         <span>Initializing Neural Uplink Integration</span>
         <div className="flex gap-4">
           <span className="animate-pulse">LAT: 18.65N</span>
@@ -642,16 +678,20 @@ export function MarsMap() {
   const [selectedBase, setSelectedBase] = useState(BASES[0]);
   const [activeDropdown, setActiveDropdown] = useState<"target" | "base" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState<{ color: "green" | "amber" | "silver" | "purple"; title: string; route: string }>({ 
+    color: "green", 
+    title: "GENESIS PROTOCOL", 
+    route: "/genesis-protocol" 
+  });
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
   const { progress } = useProgress();
+  const router = useRouter();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setSelectedPoi(null);
-        setIsViewingOnline(false);
         setIsLoading(false);
         setActiveDropdown(null);
       }
@@ -669,8 +709,32 @@ export function MarsMap() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        router.push(loadingConfig.route);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, loadingConfig, router]);
+
   const handleZoomThreshold = () => {
-    if (!isViewingOnline && !isLoading) {
+    // Zoom threshold trigger if needed
+  };
+
+  const handleBaseSelect = (base: typeof BASES[0]) => {
+    setSelectedBase(base);
+    if (base.id === "genesis") {
+      setLoadingConfig({ color: "green", title: "GENESIS PROTOCOL", route: "/genesis-protocol" });
+      setIsLoading(true);
+    } else if (base.id === "vitalis") {
+      setLoadingConfig({ color: "amber", title: "VITALIS REGION", route: "/vitalis-region" });
+      setIsLoading(true);
+    } else if (base.id === "celestial") {
+      setLoadingConfig({ color: "silver", title: "CELESTIAL ZONE", route: "/celestial-zone" });
+      setIsLoading(true);
+    } else if (base.id === "global") {
+      setLoadingConfig({ color: "purple", title: "GLOBAL OVERWATCH", route: "/global-status" });
       setIsLoading(true);
     }
   };
@@ -687,116 +751,82 @@ export function MarsMap() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {isLoading && (
+          <SatelliteLoadingScreen
+            isLoading={isLoading}
+            color={loadingConfig.color}
+            title={loadingConfig.title}
+          />
+        )}
+      </AnimatePresence>
+
       <ScannerHUD />
-
-        <TelemetryFeed />
-        
-        {/* Backdrop for selected state to catch clicks */}
-        {(selectedPoi || isViewingOnline || isLoading) &&
-      <div
-        className="absolute inset-0 z-0 pointer-events-auto cursor-pointer"
-        onClick={() => {
-          setSelectedPoi(null);
-          setIsViewingOnline(false);
-          setIsLoading(false);
-          setActiveDropdown(null);
-        }} />
-
+      <TelemetryFeed />
+      
+      {(selectedPoi || isLoading) &&
+        <div
+          className="absolute inset-0 z-0 pointer-events-auto cursor-pointer"
+          onClick={() => {
+            setSelectedPoi(null);
+            setIsLoading(false);
+            setActiveDropdown(null);
+          }} 
+        />
       }
 
-        <div className="absolute top-8 right-8 flex gap-8 z-[60] pointer-events-none">
-          <div className="flex flex-col items-end">
-            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Network Layer</div>
-            <div className="text-[11px] text-cyan-400 font-bold tracking-widest flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
-              BLOCKCHAIN-MAINNET
-            </div>
-            <div className="text-[7px] text-white/20 mt-1">NODE_ID: 0x72a...1f4</div>
+      <div className="absolute top-8 right-8 flex gap-8 z-[60] pointer-events-none">
+        <div className="flex flex-col items-end">
+          <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Network Layer</div>
+          <div className="text-[11px] text-cyan-400 font-bold tracking-widest flex items-center gap-2">
+            <div className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee] animate-pulse" />
+            BLOCKCHAIN-MAINNET
           </div>
-          <div className="flex flex-col items-end">
-            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Environment</div>
-            <div className="text-[11px] text-purple-400 font-bold tracking-widest flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc] animate-pulse" />
-              METAVERSE-L2
-            </div>
-            <div className="text-[7px] text-white/20 mt-1">SYNC_FREQ: 60Hz</div>
-          </div>
-          <div className="flex flex-col items-end border-l border-white/10 pl-8">
-            <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Rarity Index</div>
-            <div className="text-[11px] text-orange-500 font-bold tracking-widest">α-7.92</div>
-            <div className="text-[7px] text-white/20 mt-1">QUICK_MINT: ENABLED</div>
-          </div>
+          <div className="text-[7px] text-white/20 mt-1">NODE_ID: 0x72a...1f4</div>
         </div>
+        <div className="flex flex-col items-end">
+          <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Environment</div>
+          <div className="text-[11px] text-purple-400 font-bold tracking-widest flex items-center gap-2">
+            <div className="w-1 h-1 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc] animate-pulse" />
+            METAVERSE-L2
+          </div>
+          <div className="text-[7px] text-white/20 mt-1">SYNC_FREQ: 60Hz</div>
+        </div>
+        <div className="flex flex-col items-end border-l border-white/10 pl-8">
+          <div className="text-[8px] uppercase tracking-[0.3em] text-white/30 mb-1">Rarity Index</div>
+          <div className="text-[11px] text-orange-500 font-bold tracking-widest">α-7.92</div>
+          <div className="text-[7px] text-white/20 mt-1">QUICK_MINT: ENABLED</div>
+        </div>
+      </div>
 
-        <Canvas shadows gl={{ antialias: true, alpha: true }}>
-          <PerspectiveCamera makeDefault position={[0, 0, 2.5]} fov={45} />
-          <OrbitControls
+      <Canvas shadows gl={{ antialias: true, alpha: true }}>
+        <PerspectiveCamera makeDefault position={[0, 0, 2.5]} fov={45} />
+        <OrbitControls
           ref={controlsRef}
           enablePan={false}
           minDistance={1.4}
           maxDistance={4}
-          autoRotate={!selectedPoi && !isViewingOnline && !isLoading}
+          autoRotate={!selectedPoi && !isLoading}
           autoRotateSpeed={0.5}
           enableDamping
-          dampingFactor={0.05} />
-
-          
-          <ambientLight intensity={0.6} />
-            <pointLight position={[10, 5, 10]} intensity={4} color="#ffffff" castShadow />
-            <spotLight position={[-10, 10, 10]} angle={0.25} penumbra={1} intensity={2.5} color="#ffffff" />
-            <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
-          
-          <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
-          
-          <Suspense fallback={null}>
-            <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
-            <ZoomTracker onZoomThreshold={handleZoomThreshold} />
-          </Suspense>
-        </Canvas>
-
-      <AnimatePresence>
-        {isLoading &&
-        <LoadingScreen onComplete={() => {
-          setIsLoading(false);
-          setIsViewingOnline(true);
-        }} />
-        }
-
-        {isViewingOnline &&
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 z-[100] bg-black flex flex-col pointer-events-auto">
-
-            <div className="flex justify-between items-center p-4 bg-zinc-900 border-b border-white/10">
-              <div className="text-white text-xs font-bold uppercase tracking-widest flex items-center gap-3 !whitespace-pre-line">
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />Live Feed: mars blocks excavation
-
-            </div>
-              <button
-              onClick={() => setIsViewingOnline(false)}
-              className="text-white/60 hover:text-white transition-colors">
-
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-              <iframe
-              src="/online_viewer_net8.htm"
-              className="flex-1 w-full h-screen border-none"
-              title="Online Viewer" />
-
-          </motion.div>
-        }
-      </AnimatePresence>
+          dampingFactor={0.05} 
+        />
+        
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 5, 10]} intensity={4} color="#ffffff" castShadow />
+        <spotLight position={[-10, 10, 10]} angle={0.25} penumbra={1} intensity={2.5} color="#ffffff" />
+        <directionalLight position={[0, 0, 5]} intensity={1.5} color="#ffffff" />
+        
+        <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
+        
+        <Suspense fallback={null}>
+          <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+          <ZoomTracker onZoomThreshold={handleZoomThreshold} />
+        </Suspense>
+      </Canvas>
 
       <div className="absolute top-10 left-10 z-10 pointer-events-none">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}>
-
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-5xl font-['Syncopate'] font-bold tracking-[0.2em] text-white uppercase leading-none">
             MARS <span className="text-orange-500">EXPLORER</span>
           </h1>
@@ -819,7 +849,7 @@ export function MarsMap() {
           />
           <BaseOperationsDropdown 
             selectedBase={selectedBase} 
-            setSelectedBase={setSelectedBase}
+            setSelectedBase={handleBaseSelect}
             isOpen={activeDropdown === "base"}
             setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
           />
@@ -827,33 +857,33 @@ export function MarsMap() {
 
         <div className="flex flex-col items-end gap-4">
           <AnimatePresence>
-            {selectedPoi &&
-            <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              onClick={() => setSelectedPoi(null)}
-              className="flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto">
-
+            {selectedPoi && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                onClick={() => setSelectedPoi(null)}
+                className="flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto"
+              >
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
                 Return to Orbit
               </motion.button>
-            }
+            )}
           </AnimatePresence>
 
           <AnimatePresence mode="wait">
-            {selectedPoi &&
-            <motion.div
-              key={selectedPoi.name}
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden">
-
+            {selectedPoi && (
+              <motion.div
+                key={selectedPoi.name}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
+              >
                 <button
-                onClick={() => setSelectedPoi(null)}
-                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20">
-
+                  onClick={() => setSelectedPoi(null)}
+                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20"
+                >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -888,7 +918,7 @@ export function MarsMap() {
                   </div>
                 </div>
               </motion.div>
-            }
+            )}
           </AnimatePresence>
         </div>
       </div>
@@ -907,6 +937,6 @@ export function MarsMap() {
           <div className="text-2xl font-['Syncopate'] text-white">-63 <span className="text-[10px]">°C</span></div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }
