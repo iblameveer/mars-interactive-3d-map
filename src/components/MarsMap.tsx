@@ -6,6 +6,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF, useProgress } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import SatelliteLoadingScreen from "./SatelliteLoadingScreen";
 
 const POIS = [
 {
@@ -543,11 +545,13 @@ function TargetDropdown({
 function BaseOperationsDropdown({ 
   selectedBase, 
   setSelectedBase,
+  onBaseSelect,
   isOpen,
   setIsOpen 
 }: { 
   selectedBase: typeof BASES[0], 
   setSelectedBase: (base: typeof BASES[0]) => void,
+  onBaseSelect: (base: typeof BASES[0]) => void,
   isOpen: boolean,
   setIsOpen: (open: boolean) => void 
 }) {
@@ -609,10 +613,11 @@ function BaseOperationsDropdown({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                onClick={() => {
-                  setSelectedBase(base);
-                  setIsOpen(false);
-                }}
+                  onClick={() => {
+                    onBaseSelect(base);
+                    setIsOpen(false);
+                  }}
+
                 className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
                   selectedBase.id === base.id 
                     ? "border-cyan-500 bg-cyan-500/5 text-cyan-500" 
@@ -638,10 +643,12 @@ function BaseOperationsDropdown({
 }
 
 export function MarsMap() {
+  const router = useRouter();
   const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const [selectedBase, setSelectedBase] = useState(BASES[0]);
   const [activeDropdown, setActiveDropdown] = useState<"target" | "base" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGenesisProtocolLoading, setIsGenesisProtocolLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
   const controlsRef = useRef<any>(null);
@@ -677,15 +684,24 @@ export function MarsMap() {
 
   return (
     <div className="relative w-full h-screen bg-[#050508] overflow-hidden font-['Space_Grotesk'] selection:bg-orange-500 selection:text-white">
-      <AnimatePresence>
-        {isInitialLoading && (
-          <LoadingScreen 
-            title="Initializing Mars Uplink"
-            progress={progress}
-            onComplete={() => setIsInitialLoading(false)} 
-          />
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {isInitialLoading && (
+            <LoadingScreen 
+              title="Initializing Mars Uplink"
+              progress={progress}
+              onComplete={() => setIsInitialLoading(false)} 
+            />
+          )}
+          {isGenesisProtocolLoading && (
+            <SatelliteLoadingScreen 
+              onComplete={() => {
+                setIsGenesisProtocolLoading(false);
+                router.push("/genesis");
+              }} 
+            />
+          )}
+        </AnimatePresence>
+
 
       <ScannerHUD />
 
@@ -817,12 +833,19 @@ export function MarsMap() {
             isOpen={activeDropdown === "target"}
             setIsOpen={(open) => setActiveDropdown(open ? "target" : null)}
           />
-          <BaseOperationsDropdown 
-            selectedBase={selectedBase} 
-            setSelectedBase={setSelectedBase}
-            isOpen={activeDropdown === "base"}
-            setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
-          />
+            <BaseOperationsDropdown 
+              selectedBase={selectedBase} 
+              setSelectedBase={setSelectedBase}
+              onBaseSelect={(base) => {
+                setSelectedBase(base);
+                if (base.id === "genesis") {
+                  setIsGenesisProtocolLoading(true);
+                }
+              }}
+              isOpen={activeDropdown === "base"}
+              setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
+            />
+
         </div>
 
         <div className="flex flex-col items-end gap-4">
