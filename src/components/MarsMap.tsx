@@ -3,145 +3,86 @@
 import * as React from "react";
 import { useRef, useState, useMemo, Suspense, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF, useProgress } from "@react-three/drei";
+import { OrbitControls, Stars, Html, PerspectiveCamera, useGLTF, useProgress, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { LoadingScreen as SatelliteLoadingScreen } from "./LoadingScreen";
 
-const POIS = [
-{
-  name: "Olympus Mons",
-  lat: 18.65,
-  lng: 226.2,
-  description: "The largest volcano in the solar system, three times the height of Everest.",
-  color: "#ff4d4d",
-  type: "Volcano",
-  image: "https://images-assets.nasa.gov/image/PIA02032/PIA02032~medium.jpg"
-},
-{
-  name: "Valles Marineris",
-  lat: -13.9,
-  lng: 300.8,
-  description: "A vast canyon system that would stretch across the entire United States.",
-  color: "#ff944d",
-  type: "Canyon",
-  image: "https://images-assets.nasa.gov/image/PIA04353/PIA04353~medium.jpg"
-},
-{
-  name: "Jezero Crater",
-  lat: 18.44,
-  lng: 77.45,
-  description: "Landing site of the Perseverance rover; a former river delta where life might have existed.",
-  color: "#4dff4d",
-  type: "Impact Crater",
-  image: "https://images-assets.nasa.gov/image/PIA24467/PIA24467~medium.jpg"
-},
-{
-  name: "Gale Crater",
-  lat: -4.59,
-  lng: 137.44,
-  description: "Home to Mount Sharp and landing site of the Curiosity rover.",
-  color: "#4d94ff",
-  type: "Impact Crater",
-  image: "https://images-assets.nasa.gov/image/PIA19920/PIA19920~medium.jpg"
-},
-{
-  name: "Hellas Planitia",
-  lat: -42.7,
-  lng: 70.0,
-  description: "One of the largest impact basins in the solar system.",
-  color: "#d14dff",
-  type: "Basin",
-  image: "https://images-assets.nasa.gov/image/PIA03612/PIA03612~medium.jpg"
-}];
-
 const BASES = [
-  { id: "genesis", name: "Genesis Protocol", status: "ONLINE", code: "GEN-01" },
-  { id: "vitalis", name: "Vitalis Region", status: "SECURE", code: "VIT-04" },
-  { id: "celestial", name: "Celestial Zones", status: "ACTIVE", code: "CEL-09" },
-  { id: "global", name: "Global Status", status: "STANDBY", code: "GLOB-X", special: true }
+  { id: "genesis", name: "Genesis Estates", status: "ONLINE", code: "GEN-01", lat: 45, lng: 150, color: "#22c55e" },
+  { id: "vitalis", name: "Vitalis Region", status: "SECURE", code: "VIT-04", lat: 5, lng: 290, color: "#f59e0b" },
+  { id: "celestial", name: "Celestial Zones", status: "ACTIVE", code: "CEL-09", lat: -40, lng: 85, color: "#cbd5e1" },
+  { id: "global", name: "Global Status", status: "STANDBY", code: "GLOB-X", special: true, lat: 0, lng: 0, color: "#a855f7" }
 ];
 
-function latLngToVector3(lat: number, lng: number, radius: number) {
-  const phi = (90 - lat) * (Math.PI / 180);
-  const theta = (lng + 180) * (Math.PI / 180);
-  const x = -(radius * Math.sin(phi) * Math.cos(theta));
-  const z = radius * Math.sin(phi) * Math.sin(theta);
-  const y = radius * Math.cos(phi);
-  return new THREE.Vector3(x, y, z);
-}
-
-const markerGeometry = new THREE.SphereGeometry(0.015, 16, 16);
-const glowGeometry = new THREE.SphereGeometry(0.02, 16, 16);
-
-const Marker = React.memo(({ poi, onClick, active }: {poi: typeof POIS[0];onClick: () => void;active: boolean;}) => {
-  const position = useMemo(() => latLngToVector3(poi.lat, poi.lng, 1.02), [poi.lat, poi.lng]);
-  const [hovered, setHovered] = useState(false);
-  const glowRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (glowRef.current) {
-      const s = 1 + Math.sin(state.clock.getElapsedTime() * 4) * 0.2;
-      glowRef.current.scale.set(s, s, s);
-    }
-  });
-
+const BaseButtons = ({ onSelect }: { onSelect: (base: typeof BASES[0]) => void }) => {
+  const activeBases = BASES.filter(b => !b.special);
+  
   return (
-    <group position={position}>
-      <mesh
-        geometry={markerGeometry}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}>
-        <meshBasicMaterial color={active ? "#ffffff" : poi.color} />
-      </mesh>
-      
-      <mesh ref={glowRef} geometry={glowGeometry}>
-        <meshBasicMaterial color={poi.color} transparent opacity={0.3} />
-      </mesh>
+    <div className="flex gap-4 pointer-events-auto w-full">
+      {activeBases.map((base, idx) => (
+        <button
+          key={base.id}
+          onClick={() => onSelect(base)}
+          className="group relative flex flex-col items-start gap-1 p-6 flex-1 transition-all duration-300"
+        >
+          {/* Futuristic Background */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md border-t border-white/5 group-hover:bg-white/5 transition-all duration-500" />
+          
+          {/* Slanted Accent */}
+          <div 
+            className="absolute bottom-0 left-0 w-1 h-0 group-hover:h-full transition-all duration-500"
+            style={{ backgroundColor: base.color }}
+          />
+          
+          {/* Corner Brackets */}
+          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/10 group-hover:border-white/40 transition-colors" />
+          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/10 group-hover:border-white/40 transition-colors" />
 
-      {hovered && !active &&
-      <Html distanceFactor={10} zIndexRange={[10, 0]}>
-          <div className="pointer-events-none select-none">
-            <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="group flex flex-col items-center">
-
-              <div className="w-24 h-24 rounded-full border-2 border-white/40 overflow-hidden bg-black/80 backdrop-blur-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] group-hover:border-orange-500/60 group-hover:shadow-[0_0_25px_rgba(251,146,60,0.3)] transition-all duration-500">
-                <img src={poi.image} alt={poi.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 scale-110 group-hover:scale-100 transition-transform duration-700" />
-              </div>
-              <div className="mt-2 flex flex-col items-center">
-                <div className="h-4 w-px bg-gradient-to-b from-white/40 to-transparent" />
-              </div>
-            </motion.div>
-          </div>
-        </Html>
-      }
-
-      {active &&
-      <Html distanceFactor={8} zIndexRange={[15, 0]}>
-          <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="pointer-events-none">
-
-            <div className="w-28 h-28 rounded-full border-2 border-orange-500 overflow-hidden shadow-[0_0_30px_rgba(251,146,60,0.4)] bg-black">
-              <img src={poi.image} alt={poi.name} className="w-full h-full object-cover" />
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-start gap-1 w-full">
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-1 h-1 rounded-full animate-pulse"
+                style={{ backgroundColor: base.color, boxShadow: `0 0 10px ${base.color}` }}
+              />
+              <span className="text-[9px] font-mono tracking-[0.3em] text-white/40 uppercase group-hover:text-white/60 transition-colors">
+                {base.code}
+              </span>
             </div>
-            <div className="h-6 w-px bg-orange-500 mx-auto" />
-            <div className="w-2 h-2 rounded-full bg-orange-500 mx-auto shadow-[0_0_10px_#f97316]" />
-          </motion.div>
-        </Html>
-      }
-    </group>);
-});
-
-Marker.displayName = "Marker";
+            <span 
+              className="text-lg font-black tracking-[0.1em] uppercase font-['Syncopate'] transition-all duration-300 group-hover:translate-x-1"
+              style={{ color: base.id === 'celestial' ? '#ffffff' : base.color }}
+            >
+              {base.name}
+            </span>
+            <div className="flex items-center gap-4 mt-4 w-full">
+              <div className="h-[1px] flex-1 bg-white/5 overflow-hidden">
+                <motion.div 
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "100%" }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: idx * 0.5 }}
+                  className="h-full w-1/2 opacity-30"
+                  style={{ background: `linear-gradient(90deg, transparent, ${base.color}, transparent)` }}
+                />
+              </div>
+              <span className="text-[7px] font-mono text-white/20 tracking-tighter uppercase whitespace-nowrap">
+                {base.status}
+              </span>
+            </div>
+          </div>
+          
+          {/* Decorative Glow */}
+          <div 
+            className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 pointer-events-none"
+            style={{ backgroundColor: base.color }}
+          />
+        </button>
+      ))}
+    </div>
+  );
+};
 
 function ZoomTracker({ onZoomThreshold }: {onZoomThreshold: () => void;}) {
   const { camera } = useThree();
@@ -160,35 +101,28 @@ function ZoomTracker({ onZoomThreshold }: {onZoomThreshold: () => void;}) {
   return null;
 }
 
-function Mars({ activePoi, onPoiSelect }: {activePoi: typeof POIS[0] | null;onPoiSelect: (poi: typeof POIS[0]) => void;}) {
+function Mars() {
   const marsRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF("/models/mars.glb");
+  const { scene } = useGLTF("/models/mars_v2.glb");
 
   useFrame((state, delta) => {
-    if (marsRef.current && !activePoi) {
+    if (marsRef.current) {
       marsRef.current.rotation.y += delta * 0.04;
     }
   });
 
   return (
     <group>
+      <Center>
         <primitive 
           ref={marsRef} 
           object={scene} 
-          scale={0.4}
+          scale={1.2}
           rotation={[0, 0, 0]}
-        >
-        {POIS.map((poi) => (
-          <Marker
-            key={poi.name}
-            poi={poi}
-            onClick={() => onPoiSelect(poi)}
-            active={activePoi?.name === poi.name}
-          />
-        ))}
-        </primitive>
-        
-        <group rotation={[Math.PI / 2, 0, 0]}>
+        />
+      </Center>
+
+      <group rotation={[Math.PI / 2, 0, 0]}>
         <mesh>
           <ringGeometry args={[1.2, 1.205, 128]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.1} side={THREE.DoubleSide} />
@@ -555,203 +489,8 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
   );
 }
 
-function TargetDropdown({ 
-  selectedPoi, 
-  setSelectedPoi,
-  isOpen,
-  setIsOpen 
-}: { 
-  selectedPoi: typeof POIS[0] | null, 
-  setSelectedPoi: (poi: typeof POIS[0] | null) => void,
-  isOpen: boolean,
-  setIsOpen: (open: boolean) => void 
-}) {
-  return (
-    <div className="flex flex-col gap-3 pointer-events-auto">
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-orange-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
-        {/* Decorative corner elements */}
-        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-orange-500/40" />
-        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-orange-500/40" />
-
-        <div className="flex flex-col items-start gap-1 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-            <div className="text-[10px] text-orange-500 font-bold tracking-[0.3em] font-mono">PROTOCOL_OVERRIDE</div>
-          </div>
-          <div className="text-[12px] text-white uppercase tracking-[0.2em] font-bold pl-3.5">
-            {selectedPoi ? selectedPoi.name : "SYSTEM_READY"}
-          </div>
-        </div>
-        <div className="ml-auto w-8 h-8 flex items-center justify-center relative z-10 border-l border-white/5 pl-4">
-          <motion.div 
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            className="text-white/40"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </motion.div>
-        </div>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
-            >
-            {/* Background scanner animation */}
-            <motion.div 
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute left-0 right-0 h-10 bg-gradient-to-b from-transparent via-orange-500/5 to-transparent pointer-events-none"
-            />
-
-            {POIS.map((poi, idx) => (
-              <motion.button
-                key={poi.name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.04 }}
-                onClick={() => {
-                  setSelectedPoi(poi);
-                  setIsOpen(false);
-                }}
-                className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
-                  selectedPoi?.name === poi.name 
-                    ? "border-orange-500 bg-orange-500/5 text-orange-500" 
-                    : "border-transparent text-white/40 hover:text-white/80"
-                }`}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="relative text-[11px] font-bold uppercase tracking-[0.2em]">{poi.name}</span>
-                  <span className="relative text-[7px] opacity-40 font-mono tracking-widest uppercase">{poi.type}</span>
-                </div>
-                <div className="flex flex-col items-end gap-0.5 opacity-30 group-hover:opacity-60 transition-opacity">
-                  <span className="text-[7px] font-mono tracking-tighter">{poi.lat.toFixed(2)}°N</span>
-                  <span className="text-[7px] font-mono tracking-tighter">{poi.lng.toFixed(2)}°E</span>
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function BaseOperationsDropdown({ 
-  selectedBase, 
-  setSelectedBase,
-  isOpen,
-  setIsOpen 
-}: { 
-  selectedBase: typeof BASES[0], 
-  setSelectedBase: (base: typeof BASES[0]) => void,
-  isOpen: boolean,
-  setIsOpen: (open: boolean) => void 
-}) {
-  return (
-    <div className="flex flex-col gap-3 pointer-events-auto">
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className="group relative flex items-center gap-4 bg-black/60 backdrop-blur-xl border border-white/10 p-4 hover:border-cyan-500/50 transition-all duration-300 overflow-hidden min-w-[260px] rounded-sm"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
-        {/* Decorative corner elements */}
-        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/40" />
-        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/40" />
-
-        <div className="flex flex-col items-start gap-1 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
-            <div className="text-[10px] text-cyan-500 font-bold tracking-[0.3em] font-mono uppercase">BASES_OF_OPERATIONS</div>
-          </div>
-          <div className="text-[12px] text-white uppercase tracking-[0.2em] font-bold pl-3.5">
-            {selectedBase.name}
-          </div>
-        </div>
-        <div className="ml-auto w-8 h-8 flex items-center justify-center relative z-10 border-l border-white/5 pl-4">
-          <motion.div 
-            animate={{ rotate: isOpen ? 180 : 0 }}
-            className="text-white/40"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </motion.div>
-        </div>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex flex-col gap-1 p-1 bg-black/80 backdrop-blur-2xl border border-white/10 min-w-[260px] shadow-2xl relative overflow-hidden rounded-sm"
-            >
-            {/* Background scanner animation */}
-            <motion.div 
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute left-0 right-0 h-10 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent pointer-events-none"
-            />
-
-            {BASES.map((base, idx) => (
-              <motion.button
-                key={base.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: idx * 0.04 }}
-                onClick={() => {
-                  setSelectedBase(base);
-                  setIsOpen(false);
-                }}
-                className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
-                  selectedBase.id === base.id 
-                    ? "border-cyan-500 bg-cyan-500/5 text-cyan-500" 
-                    : base.special 
-                      ? "border-purple-500/30 text-purple-400/80 hover:text-purple-300 bg-purple-500/5"
-                      : "border-transparent text-white/40 hover:text-white/80"
-                }`}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className={`relative text-[11px] font-bold uppercase tracking-[0.2em] ${base.special ? "italic" : ""}`}>{base.name}</span>
-                  <span className="relative text-[7px] opacity-40 font-mono tracking-widest uppercase">{base.code}</span>
-                </div>
-                <div className="flex flex-col items-end gap-0.5 opacity-30 group-hover:opacity-60 transition-opacity">
-                  <span className={`text-[7px] font-mono tracking-tighter px-1 border ${base.special ? "border-purple-500/50 text-purple-400" : "border-white/10"}`}>{base.status}</span>
-                </div>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
 export function MarsMap() {
-  const [selectedPoi, setSelectedPoi] = useState<typeof POIS[0] | null>(null);
   const [selectedBase, setSelectedBase] = useState(BASES[0]);
-  const [activeDropdown, setActiveDropdown] = useState<"target" | "base" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingConfig, setLoadingConfig] = useState<{ color: "green" | "amber" | "silver" | "purple"; title: string; route: string }>({ 
     color: "green", 
@@ -766,21 +505,13 @@ export function MarsMap() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setSelectedPoi(null);
         setIsLoading(false);
-        setActiveDropdown(null);
       }
     };
     
-    const handleClickOutside = () => {
-      setActiveDropdown(null);
-    };
-
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("click", handleClickOutside);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("click", handleClickOutside);
     };
   }, []);
 
@@ -839,13 +570,11 @@ export function MarsMap() {
       <ScannerHUD />
       <TelemetryFeed />
       
-      {(selectedPoi || isLoading) &&
+      {isLoading &&
         <div
           className="absolute inset-0 z-0 pointer-events-auto cursor-pointer"
           onClick={() => {
-            setSelectedPoi(null);
             setIsLoading(false);
-            setActiveDropdown(null);
           }} 
         />
       }
@@ -881,7 +610,7 @@ export function MarsMap() {
           enablePan={false}
           minDistance={1.4}
           maxDistance={4}
-          autoRotate={!selectedPoi && !isLoading}
+          autoRotate={!isLoading}
           autoRotateSpeed={0.5}
           enableDamping
           dampingFactor={0.05} 
@@ -895,7 +624,7 @@ export function MarsMap() {
         <Stars radius={100} depth={50} count={7000} factor={6} saturation={0} fade speed={1.5} />
         
         <Suspense fallback={null}>
-          <Mars activePoi={selectedPoi} onPoiSelect={setSelectedPoi} />
+          <Mars />
           <ZoomTracker onZoomThreshold={handleZoomThreshold} />
         </Suspense>
       </Canvas>
@@ -914,88 +643,8 @@ export function MarsMap() {
         </motion.div>
       </div>
 
-      <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end z-10 pointer-events-none">
-        <div className="flex gap-4">
-          <TargetDropdown 
-            selectedPoi={selectedPoi} 
-            setSelectedPoi={setSelectedPoi}
-            isOpen={activeDropdown === "target"}
-            setIsOpen={(open) => setActiveDropdown(open ? "target" : null)}
-          />
-          <BaseOperationsDropdown 
-            selectedBase={selectedBase} 
-            setSelectedBase={handleBaseSelect}
-            isOpen={activeDropdown === "base"}
-            setIsOpen={(open) => setActiveDropdown(open ? "base" : null)}
-          />
-        </div>
-
-        <div className="flex flex-col items-end gap-4">
-          <AnimatePresence>
-            {selectedPoi && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                onClick={() => setSelectedPoi(null)}
-                className="flex items-center gap-2 text-[10px] text-orange-500 font-bold uppercase tracking-widest hover:text-orange-400 transition-colors pointer-events-auto"
-              >
-                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                Return to Orbit
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            {selectedPoi && (
-              <motion.div
-                key={selectedPoi.name}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="relative bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-sm max-w-md pointer-events-auto overflow-hidden"
-              >
-                <button
-                  onClick={() => setSelectedPoi(null)}
-                  className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors z-20"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
-                <div className="absolute top-0 right-0 w-8 h-8 border-t border-r border-orange-500/50" />
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b border-l border-orange-500/50" />
-                
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="px-2 py-0.5 border border-orange-500 text-orange-500 text-[9px] font-bold uppercase tracking-tighter">
-                    {selectedPoi.type}
-                  </div>
-                  <div className="h-px flex-1 bg-white/10" />
-                </div>
-
-                <h2 className="text-4xl font-['Syncopate'] font-bold text-white mb-4 tracking-tight uppercase">
-                  {selectedPoi.name}
-                </h2>
-
-                <p className="text-white/60 leading-relaxed text-sm font-light mb-8 font-['Space_Grotesk']">
-                  {selectedPoi.description}
-                </p>
-
-                <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
-                  <div>
-                    <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Latitude</div>
-                    <div className="text-white font-mono text-xs">{selectedPoi.lat}° N</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-white/30 uppercase tracking-[0.2em] mb-1">Longitude</div>
-                    <div className="text-white font-mono text-xs">{selectedPoi.lng}° E</div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <div className="absolute bottom-10 left-10 right-10 flex flex-col items-stretch gap-6 z-10 pointer-events-none">
+        <BaseButtons onSelect={handleBaseSelect} />
       </div>
 
       <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-end gap-8 opacity-40 pointer-events-none">
