@@ -425,9 +425,9 @@ export default function CelestialZonePage() {
         }
       ` }} />
 
-      {/* Back Button */}
-      <Link href="/" className="fixed top-24 left-8 z-[100] px-4 py-2 bg-black/80 border border-red-500/50 text-red-500 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500 transition-all flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] pointer-events-auto border-l-4">
-        <Power className="w-3 h-3" />
+      {/* Terminate Link Button */}
+      <Link href="/" className="fixed top-24 right-8 z-[100] px-6 py-2 bg-black/80 border-2 border-slate-500/20 text-slate-500/70 hover:text-slate-500 hover:border-slate-500/40 transition-all flex items-center gap-3 font-mono text-xs uppercase tracking-[0.2em] pointer-events-auto shadow-[0_0_15px_rgba(148,163,184,0.2)]">
+        <Power className="w-4 h-4" />
         Terminate Link
       </Link>
 

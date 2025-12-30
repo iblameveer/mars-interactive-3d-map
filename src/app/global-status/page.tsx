@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { Power } from "lucide-react";
 
 export default function GlobalStatusPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -276,11 +276,13 @@ export default function GlobalStatusPage() {
         .bottom-right { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
       ` }} />
 
-      {/* Back Button */}
-      <Link href="/" className="fixed top-24 left-8 z-[100] p-3 rounded-full bg-black/50 border border-purple-500/20 text-purple-500/70 hover:text-purple-500 hover:border-purple-500/40 transition-all flex items-center gap-2 font-mono text-xs uppercase pointer-events-auto">
-        <ArrowLeft className="w-4 h-4" />
-        Return to Command Center
-      </Link>
+      {/* Terminate Link Button */}
+      <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[150] pointer-events-auto">
+        <Link href="/" className="px-10 py-3 bg-black/90 border-2 border-purple-500/40 text-purple-500 hover:bg-purple-500/20 hover:border-purple-500 transition-all flex items-center gap-4 font-mono text-sm uppercase tracking-[0.4em] shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+          <Power className="w-5 h-5" />
+          Terminate Link
+        </Link>
+      </div>
 
       <canvas ref={canvasRef} id="global-canvas" className="absolute inset-0 w-full h-full" />
       <div className="scanlines" />

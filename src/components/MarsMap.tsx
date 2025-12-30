@@ -277,35 +277,38 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
     cyan: {
       text: "text-cyan-500",
       bg: "bg-cyan-500",
-      border: "border-cyan-500/20",
+      border: "border-cyan-500/30",
       gradient: "from-cyan-600 to-cyan-400",
-      shadow: "shadow-[0_0_15px_rgba(34,211,238,0.5)]",
-      logHeader: "text-cyan-500/50",
+      shadow: "shadow-[0_0_20px_rgba(34,211,238,0.4)]",
+      logHeader: "text-cyan-500/60",
       logTimestamp: "text-cyan-500/40",
       glitchBorder: "border-cyan-500/10",
-      footer: "text-cyan-500/20"
+      footer: "text-cyan-500/20",
+      accent: "bg-cyan-500/10"
     },
     green: {
       text: "text-green-500",
       bg: "bg-green-500",
-      border: "border-green-500/20",
+      border: "border-green-500/30",
       gradient: "from-green-600 to-green-400",
-      shadow: "shadow-[0_0_15px_rgba(34,197,94,0.5)]",
-      logHeader: "text-green-500/50",
+      shadow: "shadow-[0_0_20px_rgba(34,197,94,0.4)]",
+      logHeader: "text-green-500/60",
       logTimestamp: "text-green-500/40",
       glitchBorder: "border-green-500/10",
-      footer: "text-green-500/20"
+      footer: "text-green-500/20",
+      accent: "bg-green-500/10"
     },
     amber: {
       text: "text-amber-500",
       bg: "bg-amber-500",
-      border: "border-amber-500/20",
+      border: "border-amber-500/30",
       gradient: "from-amber-600 to-amber-400",
-      shadow: "shadow-[0_0_15px_rgba(245,158,11,0.5)]",
-      logHeader: "text-amber-500/50",
+      shadow: "shadow-[0_0_20px_rgba(245,158,11,0.4)]",
+      logHeader: "text-amber-500/60",
       logTimestamp: "text-amber-500/40",
       glitchBorder: "border-amber-500/10",
-      footer: "text-amber-500/20"
+      footer: "text-amber-500/20",
+      accent: "bg-amber-500/10"
     }
   }[theme];
 
@@ -339,14 +342,17 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
       "MAPPING_GEOLOGICAL_ANOMALIES...",
       "ESTABLISHING_L2_SIDECHAIN_CONNECTION...",
       "LOADING_TOPOGRAPHIC_MESH...",
-      "AUTHORIZING_PROTOCOL_7-G..."
+      "AUTHORIZING_PROTOCOL_7-G...",
+      "SECURE_UPLINK_ESTABLISHED",
+      "QUANTUM_ENCRYPTION_ACTIVE",
+      "ARES_NETWORK_ONLINE"
     ];
 
     const interval = setInterval(() => {
       if (displayProgress < 100) {
-        setLogs(prev => [messages[Math.floor(Math.random() * messages.length)], ...prev].slice(0, 8));
+        setLogs(prev => [messages[Math.floor(Math.random() * messages.length)], ...prev].slice(0, 10));
       }
-    }, 400);
+    }, 300);
 
     return () => clearInterval(interval);
   }, [displayProgress]);
@@ -356,125 +362,194 @@ function LoadingScreen({ onComplete, progress: externalProgress, title = "Establ
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-[200] bg-[#050508] flex flex-col items-center justify-center font-mono overflow-hidden">
-      
-      {/* Matrix-like background effect */}
-      <div className="absolute inset-0 pointer-events-none opacity-5">
-        <div className={`absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,255,255,0.1)_50%)] bg-[length:100%_4px] animate-pulse`} />
-        <div className={`h-full w-full flex flex-wrap gap-4 p-4 text-[8px] ${colors.text} overflow-hidden leading-none break-all`}>
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="opacity-20">
-              {Math.random().toString(36).substring(2, 15)}
-              {Math.random().toString(36).substring(2, 15)}
-              {Math.random().toString(36).substring(2, 15)}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="w-[450px] flex flex-col gap-8 relative z-10">
-        <div className={`flex justify-between items-end border-b ${colors.border} pb-4`}>
-          <div className="flex flex-col gap-1">
-            <motion.div 
-              animate={{ opacity: [1, 0.4, 1] }}
-              transition={{ duration: 0.1, repeat: Infinity }}
-              className={`text-[10px] ${colors.text} uppercase tracking-[0.4em] font-bold`}
-            >
-              {title}
-            </motion.div>
-            <div className="text-white/60 text-[9px] tracking-widest flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 ${colors.bg} animate-ping rounded-full`} />
-              SYSTEM://MARS_EXPLORER_v2.5.0
-            </div>
-          </div>
-          <div className="flex flex-col items-end">
-            <div className={`text-2xl font-bold tabular-nums ${colors.text}`}>
-              {Math.floor(displayProgress)}<span className="text-xs ml-1">%</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="h-1.5 w-full bg-white/5 relative overflow-hidden border border-white/10">
-          <motion.div
-            className={`absolute inset-y-0 left-0 bg-gradient-to-r ${colors.gradient} ${colors.shadow}`}
-            animate={{ width: `${displayProgress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-          <motion.div
-            animate={{ left: ["-100%", "200%"] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          <div className="flex flex-col gap-1.5 bg-black/40 border border-white/5 p-4 rounded-sm min-h-[160px]">
-            <div className={`text-[8px] ${colors.logHeader} uppercase tracking-[0.2em] mb-2 border-b border-white/5 pb-1`}>Uplink Log</div>
-            <AnimatePresence mode="popLayout">
-              {logs.map((log, i) => (
-                <motion.div
-                  key={log + i}
-                  initial={{ opacity: 0, x: -5 }}
-                  animate={{ opacity: 1 - i * 0.12, x: 0 }}
-                  className="text-[8px] text-white/40 tracking-widest flex items-center gap-2 whitespace-nowrap overflow-hidden"
-                >
-                  <span className={`${colors.logTimestamp}`}>[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                  {log}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-                <span>Core Sync</span>
-                <span className={displayProgress > 30 ? colors.text : "animate-pulse"}>{displayProgress > 30 ? "COMPLETE" : "SYNCING"}</span>
-              </div>
-              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 30 ? "100%" : "30%" }} />
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-                <span>Voxel Grid</span>
-                <span className={displayProgress > 60 ? colors.text : "animate-pulse"}>{displayProgress > 60 ? "READY" : "LOADING"}</span>
-              </div>
-              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 60 ? "100%" : "60%" }} />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-[8px] text-white/30 uppercase tracking-widest">
-                <span>Auth Token</span>
-                <span className={displayProgress > 90 ? colors.text : "animate-pulse"}>{displayProgress > 90 ? "VERIFIED" : "PENDING"}</span>
-              </div>
-              <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div className={`h-full ${colors.bg}/30`} animate={{ width: displayProgress > 90 ? "100%" : "90%" }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Glitch overlays */}
+      className="absolute inset-0 z-[200] bg-[#050508] flex flex-col items-center justify-center font-mono overflow-hidden"
+    >
+      {/* HUD Scanline */}
+      <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden opacity-5">
         <motion.div 
-          animate={{ 
-            opacity: [0, 0.1, 0, 0.15, 0],
-            x: [-1, 1, -1, 2, -1]
-          }}
-          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-          className={`absolute inset-0 border-2 ${colors.glitchBorder} -m-8 pointer-events-none`}
+          animate={{ top: ["-100%", "100%"] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute left-0 right-0 h-40 bg-gradient-to-b from-transparent via-white to-transparent"
         />
       </div>
 
-      <div className={`absolute bottom-12 ${colors.footer} text-[9px] tracking-[0.6em] uppercase flex flex-col items-center gap-2`}>
-        <span>Initializing Neural Uplink Integration</span>
-        <div className="flex gap-4">
-          <span className="animate-pulse">LAT: 18.65N</span>
-          <span className="animate-pulse">LNG: 226.2E</span>
-          <span className="animate-pulse">ALT: 21,229M</span>
+      {/* Military Grid */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none" 
+           style={{ 
+             backgroundImage: `linear-gradient(${theme === 'cyan' ? '#06b6d4' : theme === 'green' ? '#22c55e' : '#f59e0b'} 1px, transparent 1px), linear-gradient(90deg, ${theme === 'cyan' ? '#06b6d4' : theme === 'green' ? '#22c55e' : '#f59e0b'} 1px, transparent 1px)`,
+             backgroundSize: '40px 40px'
+           }} 
+      />
+
+      <div className="relative w-full max-w-4xl px-12 flex flex-col items-center">
+        
+        {/* Top Interface Header */}
+        <div className={`w-full flex justify-between items-start mb-20 border-b-2 ${colors.border} pb-6`}>
+            <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${colors.bg} animate-ping`} />
+                    <span className={`text-[12px] uppercase tracking-[0.5em] font-black ${colors.text}`}>Command Interface</span>
+                </div>
+                <div className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-bold">ARES NETWORK OVERWATCH v8.2.0</div>
+            </div>
+            <div className="text-right flex flex-col gap-1">
+                <div className={`text-[10px] uppercase tracking-[0.4em] font-bold ${colors.text}`}>Authorization Required</div>
+                <div className="text-[8px] text-white/20 uppercase tracking-[0.2em]">Protocol: DEEP_SPACE_7</div>
+            </div>
         </div>
+
+        <div className="w-full grid grid-cols-12 gap-12 items-center">
+            {/* Left Technical Column */}
+            <div className="col-span-4 space-y-8">
+                <div className={`bg-white/5 border ${colors.border} p-6 relative group overflow-hidden`}>
+                    <div className={`absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 ${colors.text}`} />
+                    <div className="text-[9px] text-white/40 uppercase tracking-widest mb-4">Tactical Feed</div>
+                    <div className="space-y-3">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="flex flex-col gap-1">
+                                <div className="h-1 w-full bg-white/5 overflow-hidden">
+                                    <motion.div 
+                                        animate={{ width: [`${20 + i*10}%`, `${80 - i*5}%`, `${40 + i*15}%`] }}
+                                        transition={{ duration: 2 + i * 0.5, repeat: Infinity }}
+                                        className={`h-full ${colors.bg} opacity-30`}
+                                    />
+                                </div>
+                                <div className="flex justify-between text-[7px] text-white/20 font-mono">
+                                    <span>STREAM_{i+1}</span>
+                                    <span>ACTIVE</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2 opacity-40">
+                    <div className="text-[8px] text-white uppercase tracking-[0.4em]">Environmental Scans</div>
+                    <div className="grid grid-cols-4 gap-1">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <motion.div 
+                                key={i}
+                                animate={{ opacity: [0.2, 0.8, 0.2] }}
+                                transition={{ duration: 1.5, delay: i * 0.1, repeat: Infinity }}
+                                className={`h-6 ${colors.accent} border border-${theme}-500/20`}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Progress Hex/Circle */}
+            <div className="col-span-4 flex flex-col items-center justify-center relative py-12">
+                <div className="relative">
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className={`w-64 h-64 rounded-full border border-dashed ${colors.border} flex items-center justify-center`}
+                    >
+                        <motion.div
+                            animate={{ rotate: -360 }}
+                            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                            className={`w-56 h-56 rounded-full border border-dashed ${colors.border} opacity-40`}
+                        />
+                    </motion.div>
+                    
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <motion.div
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className={`text-5xl font-black tabular-nums ${colors.text} ${colors.shadow} font-['Syncopate']`}
+                        >
+                            {Math.floor(displayProgress)}%
+                        </motion.div>
+                        <div className="text-[10px] text-white/40 uppercase tracking-[0.4em] mt-2 font-bold">Uplink Status</div>
+                    </div>
+
+                    {/* Scanning Line through the circle */}
+                    <motion.div 
+                        animate={{ top: ["0%", "100%", "0%"] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className={`absolute left-0 right-0 h-0.5 bg-${theme}-500/30 blur-sm pointer-events-none`}
+                    />
+                </div>
+            </div>
+
+            {/* Right Status Column */}
+            <div className="col-span-4 space-y-6">
+                <div className={`bg-white/5 border ${colors.border} p-6 relative h-[240px] flex flex-col`}>
+                    <div className={`absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 ${colors.text}`} />
+                    <div className={`text-[9px] ${colors.logHeader} uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2 font-bold`}>System Initialization Log</div>
+                    <div className="flex-1 overflow-hidden space-y-2">
+                        <AnimatePresence mode="popLayout">
+                            {logs.map((log, i) => (
+                                <motion.div
+                                    key={log + i}
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1 - i * 0.1, x: 0 }}
+                                    className="text-[8px] text-white/40 tracking-widest flex items-center gap-2 whitespace-nowrap"
+                                >
+                                    <span className={`${colors.logTimestamp} font-bold`}>[{new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                                    {log}
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className={`bg-white/5 border ${colors.border} p-3 flex flex-col gap-1`}>
+                        <div className="text-[7px] text-white/30 uppercase tracking-widest">Network Latency</div>
+                        <div className={`text-xs ${colors.text} font-bold tabular-nums`}>12.4ms</div>
+                    </div>
+                    <div className={`bg-white/5 border ${colors.border} p-3 flex flex-col gap-1`}>
+                        <div className="text-[7px] text-white/30 uppercase tracking-widest">Sync Priority</div>
+                        <div className={`text-xs ${colors.text} font-bold uppercase`}>CRITICAL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="w-full mt-24 space-y-8">
+            <div className="text-center flex flex-col gap-2">
+                <h2 className="text-4xl font-['Syncopate'] font-black text-white tracking-[0.6em] uppercase leading-none">
+                    {title}
+                </h2>
+                <div className="flex items-center justify-center gap-6 mt-4">
+                    <div className={`h-px flex-1 bg-gradient-to-r from-transparent to-${theme}-500/30`} />
+                    <div className={`text-[10px] ${colors.text} uppercase tracking-[0.4em] font-bold`}>Sector Alpha-9 Secure</div>
+                    <div className={`h-px flex-1 bg-gradient-to-l from-transparent to-${theme}-500/30`} />
+                </div>
+            </div>
+
+            <div className="w-full h-1 bg-white/5 relative overflow-hidden">
+                <motion.div
+                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${colors.gradient} ${colors.shadow}`}
+                    animate={{ width: `${displayProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                />
+                <motion.div
+                    animate={{ left: ["-100%", "200%"] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+            </div>
+        </div>
+
+      </div>
+
+      {/* Decorative Corner Elements */}
+      <div className={`absolute top-0 left-0 w-64 h-64 border-t-4 border-l-4 ${colors.border} opacity-20 -translate-x-32 -translate-y-32 rotate-12`} />
+      <div className={`absolute bottom-0 right-0 w-64 h-64 border-b-4 border-r-4 ${colors.border} opacity-20 translate-x-32 translate-y-32 -rotate-12`} />
+      
+      {/* Footer Readouts */}
+      <div className={`absolute bottom-8 left-12 right-12 flex justify-between items-end opacity-20 ${colors.text} font-bold text-[9px] tracking-[0.4em] uppercase`}>
+          <div className="flex gap-8">
+              <span>ORBIT: DEEP_RECON_ALPHA</span>
+              <span>HD: 852.2 GB/S</span>
+          </div>
+          <div className="flex gap-8">
+              <span>TEMP: -63°C</span>
+              <span>STABILITY: 99.9%</span>
+          </div>
       </div>
     </motion.div>
   );
