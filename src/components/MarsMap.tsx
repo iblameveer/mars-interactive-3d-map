@@ -610,8 +610,14 @@ function BaseOperationsDropdown({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
                 onClick={() => {
-                  setSelectedBase(base);
-                  setIsOpen(false);
+                  if (base.id === "genesis") {
+                    setIsLoading(true);
+                    setIsIframeLoaded(false);
+                    setIsOpen(false);
+                  } else {
+                    setSelectedBase(base);
+                    setIsOpen(false);
+                  }
                 }}
                 className={`group relative text-left px-5 py-3 hover:bg-white/5 transition-all duration-300 flex items-center justify-between gap-4 border-l-2 ${
                   selectedBase.id === base.id 
@@ -644,8 +650,20 @@ export function MarsMap() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isViewingOnline, setIsViewingOnline] = useState(false);
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const controlsRef = useRef<any>(null);
   const { progress } = useProgress();
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'EXIT_PROTOCOL') {
+        setIsViewingOnline(false);
+        setIsLoading(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -755,12 +773,17 @@ export function MarsMap() {
         </Canvas>
 
       <AnimatePresence>
-        {isLoading &&
-        <LoadingScreen onComplete={() => {
-          setIsLoading(false);
-          setIsViewingOnline(true);
-        }} />
-        }
+        {isLoading && (
+          <LoadingScreen 
+            title="Establishing Tactical Uplink" 
+            onComplete={() => {
+              if (isIframeLoaded) {
+                setIsLoading(false);
+                setIsViewingOnline(true);
+              }
+            }} 
+          />
+        )}
 
         {isViewingOnline &&
         <motion.div

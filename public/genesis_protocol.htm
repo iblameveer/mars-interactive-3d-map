@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mars Genesis v5.2 - Satellite Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #0f0;
+            --neon-orange: #f97316;
+            --glass-bg: rgba(12, 12, 20, 0.85);
+            --border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            margin: 0;
+            background-color: #050508;
+            height: 100vh;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+        }
+
+        #dashboard-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        canvas { display: block; }
+
+        /* HUD Overlay Styling */
+        .hud-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            padding: 30px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 20;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: flex-start; }
+
+        .title-block h1 {
+            font-family: 'Orbitron', sans-serif; font-size: 1.6rem; color: white; margin: 0;
+            letter-spacing: 4px; text-shadow: 0 0 15px var(--neon-blue);
+        }
+        
+        .title-block .subtitle {
+            color: var(--neon-blue); font-size: 0.9rem; opacity: 0.8; margin-top: 6px;
+            font-weight: 600; letter-spacing: 1px;
+        }
+
+        .stats-panel {
+            background: var(--glass-bg); backdrop-filter: blur(4px);
+            border: 1px solid var(--border-color); padding: 20px 25px;
+            border-radius: 4px; text-align: right; border-right: 4px solid var(--neon-purple);
+            box-shadow: -10px 0 20px rgba(0,0,0,0.5);
+            pointer-events: auto;
+        }
+
+        .stat-item { margin-bottom: 8px; color: #aaa; font-size: 0.85rem; letter-spacing: 1px; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.1rem; color: white; margin-left: 12px; }
+        .stat-value.neon { color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue); }
+
+        .live-indicator {
+            display: inline-block; width: 8px; height: 8px;
+            background-color: var(--neon-green); border-radius: 50%;
+            margin-right: 8px; box-shadow: 0 0 10px var(--neon-green);
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink { 0% { opacity: 1; scale: 1.2; } 50% { opacity: 0.4; scale: 1; } 100% { opacity: 1; scale: 1.2; } }
+
+        .footer-hud {
+            display: flex; justify-content: space-between; align-items: flex-end;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .blockchain-data {
+            background: var(--glass-bg); padding: 15px; border-left: 3px solid var(--neon-blue);
+            font-size: 0.75rem; color: rgba(255,255,255,0.6);
+        }
+
+        .blockchain-data div { margin-bottom: 4px; }
+        .highlight { color: var(--neon-blue); font-weight: bold; }
+
+        .metaverse-sync {
+            text-align: right; color: var(--neon-purple); font-size: 0.8rem;
+            letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        /* --- SATELLITE EFFECTS --- */
+        
+        .scanlines {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: repeating-linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            pointer-events: none; opacity: 0.6; z-index: 10;
+        }
+
+        .vignette {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none; z-index: 11;
+        }
+
+        .noise {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .rec-indicator {
+            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Orbitron'; color: #ff3333; font-size: 1.2rem;
+            z-index: 30; letter-spacing: 2px;
+            text-shadow: 0 0 5px #ff3333;
+        }
+        .rec-dot {
+            width: 12px; height: 12px; background-color: #ff3333;
+            border-radius: 50%; animation: blink 1s infinite;
+        }
+
+        /* Exit Button */
+        #exit-protocol {
+            pointer-events: auto;
+            margin-top: 20px;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.4);
+            color: #ff3333;
+            font-family: 'Orbitron', sans-serif;
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        #exit-protocol:hover {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff3333;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+        }
+
+        #exit-protocol::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        #exit-protocol:hover::after {
+            left: 100%;
+        }
+
+        /* Termination Overlay */
+        #termination-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #ff3333;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .term-title {
+            font-size: 2rem;
+            letter-spacing: 0.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff3333;
+        }
+
+        .term-progress {
+            width: 300px;
+            height: 2px;
+            background: rgba(255, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .term-bar {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            background: #ff3333;
+            width: 0%;
+            box-shadow: 0 0 10px #ff3333;
+        }
+
+        .term-logs {
+            margin-top: 30px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: rgba(255, 0, 0, 0.5);
+            text-align: center;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="termination-overlay">
+    <div class="term-title">TERMINATING UPLINK</div>
+    <div class="term-progress"><div class="term-bar" id="term-bar"></div></div>
+    <div class="term-logs" id="term-logs">
+        DISCONNECTING FROM ORBITAL_RECON_ALPHA...<br>
+        FLUSHING NEURAL_BUFFER...<br>
+        RE-ESTABLISHING ORBITAL_TRAJECTORY...
+    </div>
+</div>
+
+<div id="dashboard-wrapper">
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="noise"></div>
+    
+    <div class="rec-indicator"><div class="rec-dot"></div>REC [SAT_L2]</div>
+    
+    <div class="hud-layer">
+        <div class="header">
+            <div class="title-block">
+                <h1>GENESIS PROTOCOL</h1>
+                <div class="subtitle">SAT_FEED // OPTICAL_ZOOM_2X</div>
+            </div>
+            <div class="stats-panel">
+                <div class="stat-item"><span class="live-indicator"></span><span id="ui-status">MAINNET_CONNECTED</span></div>
+                <div class="stat-item">HASH_RATE <span class="stat-value neon" id="ui-hash">4.2 EH/s</span></div>
+                <div class="stat-item">ACTIVE_UNITS <span class="stat-value" id="ui-units">12</span></div>
+                <div class="stat-item">STRUCTURES <span class="stat-value" id="ui-structures">0</span></div>
+                <div class="stat-item">MARS_CORES <span class="stat-value" id="ui-blocks">0</span></div>
+                
+                <button id="exit-protocol">TERMINATE UPLINK</button>
+            </div>
+        </div>
+
+        <div class="footer-hud">
+            <div class="blockchain-data">
+                <div>NETWORK: <span class="highlight">MARS_CHAIN_L2</span></div>
+                <div>ENV_STATUS: <span class="highlight" id="ui-env">STABLE</span></div>
+                <div>VOXEL_ENGINE: <span class="highlight">v5.2_SAT_VIEW</span></div>
+                <div>SOL_SEQUENCE: <span class="highlight" id="mars-clock">SYNCING...</span></div>
+            </div>
+            <div class="metaverse-sync">
+                METAVERSE_SYNC_ACTIVE // 60HZ<br>
+                VR_SESSION_TIME: <span id="ui-timer">00:00:00</span><br>
+                USER_ID: <span class="highlight">PIONEER_0x88</span>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="miningCanvas"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('miningCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+const uiStatus = document.getElementById('ui-status');
+const uiTimer = document.getElementById('ui-timer');
+const uiUnits = document.getElementById('ui-units');
+const marsClock = document.getElementById('mars-clock');
+const exitBtn = document.getElementById('exit-protocol');
+const termOverlay = document.getElementById('termination-overlay');
+const termBar = document.getElementById('term-bar');
+
+let startTime = Date.now();
+
+// Exit Logic
+exitBtn.onclick = () => {
+    termOverlay.style.display = 'flex';
+    let p = 0;
+    const interval = setInterval(() => {
+        p += 5;
+        termBar.style.width = p + '%';
+        if (p >= 100) {
+            clearInterval(interval);
+            window.parent.postMessage({ type: 'EXIT_PROTOCOL' }, '*');
+        }
+    }, 50);
+};
+
+function updateTimer() {
+    const diff = Date.now() - startTime;
+    const hrs = Math.floor(diff / 3600000).toString().padStart(2, '0');
+    const mins = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+    uiTimer.innerText = `${hrs}:${mins}:${secs}`;
+}
+
+let width, height;
+
+function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+}
+
+function loop() {
+    updateTimer();
+    
+    // Draw dummy background for placeholder
+    ctx.fillStyle = '#050508';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Grid animation placeholder
+    ctx.strokeStyle = 'rgba(0, 243, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for(let i=0; i<width; i+=40) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
+    }
+    for(let j=0; j<height; j+=40) {
+        ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(width, j); ctx.stroke();
+    }
+    
+    requestAnimationFrame(loop);
+}
+
+resize();
+window.addEventListener('resize', resize);
+loop();
+</script>
+</body>
+</html>
