@@ -426,9 +426,17 @@ export default function CelestialZonePage() {
       ` }} />
 
       {/* Back Button */}
-      <Link href="/" className="fixed top-24 left-8 z-[100] px-4 py-2 bg-black/80 border border-red-500/50 text-red-500 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500 transition-all flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] pointer-events-auto border-l-4">
-        <Power className="w-3 h-3" />
-        Terminate Link
+      <Link 
+        href="/" 
+        className="fixed top-24 left-8 z-[100] px-6 py-2 rounded-none bg-black/80 border-2 border-slate-500/50 text-slate-500 hover:bg-slate-500/10 hover:border-slate-500 transition-all flex items-center gap-3 font-mono text-sm uppercase tracking-widest pointer-events-auto group shadow-[0_0_15px_rgba(100,116,139,0.2)]"
+      >
+        <div className="relative flex items-center justify-center">
+          <Power className="w-4 h-4" />
+          <div className="absolute inset-0 bg-slate-400 blur-sm opacity-0 group-hover:opacity-50 transition-opacity" />
+        </div>
+        TERMINATE LINK
+        <div className="absolute -top-1 -left-1 w-2 h-2 border-t-2 border-l-2 border-slate-500" />
+        <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b-2 border-r-2 border-slate-500" />
       </Link>
 
       <canvas ref={canvasRef} id="sat-feed" className="absolute inset-0 w-full h-full" />
